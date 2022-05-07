@@ -1,0 +1,90 @@
+library(tmaptools)
+library(leaflet)
+library(tidyverse)
+
+
+
+# 1.0 ACCOUNT SETUP --------------
+library(rtweet)
+token <- create_token(
+  app = "immigration_trend", 
+  consumer_key = "Hgj9nhsN2FPhruxxpwhttnBOS", 
+  consumer_secret = "IQXwprbhJYzBCqhEIpkJLcuPSPQaYTMWadj3BMg3nWrcnBIpwd",
+  access_token = "1068608387334766593-BpB8hUTe09InPeeGrAqZF9Rk2SEomb",
+  access_secret = "phFEUzi8xfvjaS7XKi5i8VNjXzoDUh326mcJ6SczheBH6"
+)
+
+# 2.0 SEARCH TWEETS --------------
+
+
+rt = search_tweets(
+  "Bonia",                ##search query
+  n = 180000,             ##Number of results
+  include_rts = FALSE,   ## Dont include retweets if want unique tweets
+  geocode = "3.14032,101.69466,93.5mi"
+  )                  
+
+#geocode = "usa"
+
+                       
+saveRDS(rt, "Data/raw.rds")
+tweeets = readRDS("Data/raw.rds")
+
+
+
+df_select_tweets<- tweeets %>% 
+  select(
+    c(user_id,
+           created_at,
+           screen_name, 
+           !is.na(hashtags),
+           text, 
+           source,
+           display_text_width>0,
+           lang,
+           !is.na(place_name), 
+           !is.na(place_full_name), 
+           !is.na(geo_coords), 
+           !is.na(country), 
+           !is.na(location),
+           retweet_count,
+           account_created_at,
+           account_lang, 
+           query
+           ) 
+  )
+
+#3.0 RESULTS --------------
+
+tweeets  %>% glimpse()
+
+
+#4.0 STREAMING TWEETS (REALTIME) --------------
+##HOW IT WORKS ? - run for five seconds 
+##tweeets <- stream_tweets(timeout = 5)
+##tweeets  %>% glimpse()
+
+
+
+#5.0 GEOCODING (REALTIME) --------------
+
+##Geocoding Coordinates
+###lookup_coords("usa")
+##tweeets <- stream_tweets(lookup_coords("usa"),timeout = 5)
+
+lookup_coords("uk")
+
+#6.0 MAP
+
+?leafet()
+
+tweeets %>%
+          select(screen_name, text, coords_coords) %>%
+          unnest_wider (coords_coords) %>%
+          filter(!is.na(...1)) %>%
+          set_names(c("screen_name", "text", "lon", "lat")) %>%
+          leaflet()   %>%
+          addTiles()   %>%
+          addMarkers(~lon, ~lat, popup = ~as.character(text), label = ~as.character(screen_name))
+
+

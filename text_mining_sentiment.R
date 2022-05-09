@@ -15,8 +15,20 @@ library(tidyverse)
 library(tidyquant)
 
 # 2.0 TIDY TEXT ----
+
+
+rt = search_tweets(
+  "vaksin",                ##search query
+  n = 180000,             ##Number of results
+  include_rts = FALSE,   ## Dont include retweets if want unique tweets
+  geocode = "3.14032,101.69466,93.5mi"
+)  
+saveRDS(rt, "Data/raw.rds")
+
 tweetsForSentiment = readRDS("Data/raw.rds")
 
+
+print(dim(tweetsForSentiment))
 ##Tidy Data
 tweets_tokenized <- tweetsForSentiment %>%
   select(text) %>%
@@ -82,34 +94,10 @@ ggplotly(g, tooltip="text") %>%
 
 
 
-#5.0 WORDCLOUD ---
-sentiment_by_word <- sentiment_bing %>%
-      count(word, sentiment, sort=TRUE)
 
-##OLD WAY IGNORE
-sentiment_by_word %>%
-  pivot_wider (names_from= sentiment, values_from=n, values_fill=list(n=0)) %>%
-  column_to_rownames(var= "word")%>%
-  comparison.cloud(
-     colors=palette_light()
-  )
-
-sentiment_by_word %>%
-   slice(1:100) %>%
-    mutate(sentiment=factor(sentiment, levels=c("positive", "negative"))) %>%
-    ggplot(aes(label=word, color=sentiment, size=n))+
-    geom_text_wordcloud_area()+
-    facet_wrap(~ sentiment, ncol=2)+
-    theme_tq()+
-    scale_color_tq()+
-    scale_size_area(max_size=16)+
-    labs(tittle ="Sentiment Word Frequency")
   
 
 
-
-
-tweetsForSentiment = readRDS("data/raw.rds")
 
 #### top 10 ############
 topwords <-  tweetsForSentiment[,1:16] %>% 

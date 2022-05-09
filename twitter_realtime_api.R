@@ -1,7 +1,28 @@
 library(tmaptools)
 library(leaflet)
 library(tidyverse)
-
+library(twitteR)
+library(base64enc)
+library(tm)
+library(rsconnect)   
+library(base64enc)
+library(shiny)
+library(rtweet)
+library(reactable)
+library(scales)
+library(reshape2)
+library(tidyverse)
+library(tidytext)
+library(RColorBrewer)
+library(shinydashboard)
+library(twitteR)
+library(ROAuth)
+library(plotly)
+library(glue)
+library(twitteR)
+library(rvest)
+library(wordcloud2)
+library(textdata)
 
 
 # 1.0 ACCOUNT SETUP --------------
@@ -13,6 +34,8 @@ token <- create_token(
   access_token = "1068608387334766593-BpB8hUTe09InPeeGrAqZF9Rk2SEomb",
   access_secret = "phFEUzi8xfvjaS7XKi5i8VNjXzoDUh326mcJ6SczheBH6"
 )
+
+
 
 # 2.0 SEARCH TWEETS --------------
 

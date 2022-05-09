@@ -46,7 +46,7 @@ ui <- dashboardPage(
                                             value = 500,
                                             step = 500)),
       h6(style = "color:#006d2c", textInput("text", h3("Text input"), 
-                                            value = "Enter text..."))
+                                            value = "najib"))
       , width = 0.3)
   ),
   
@@ -150,77 +150,111 @@ ui <- dashboardPage(
 
 
 # Define server logic 
-server <- function(input, output) {
+server <- function(input, output,session) {
+  
 
-  token <- create_token(
-    app = "immigration_trend", 
-    consumer_key = "Hgj9nhsN2FPhruxxpwhttnBOS", 
-    consumer_secret = "IQXwprbhJYzBCqhEIpkJLcuPSPQaYTMWadj3BMg3nWrcnBIpwd",
-    access_token = "1068608387334766593-BpB8hUTe09InPeeGrAqZF9Rk2SEomb",
-    access_secret = "phFEUzi8xfvjaS7XKi5i8VNjXzoDUh326mcJ6SczheBH6"
-  )
+  consumer_key = "Hgj9nhsN2FPhruxxpwhttnBOS"
+  consumer_secret = "IQXwprbhJYzBCqhEIpkJLcuPSPQaYTMWadj3BMg3nWrcnBIpwd"
+  access_token = "1068608387334766593-BpB8hUTe09InPeeGrAqZF9Rk2SEomb"
+  access_secret = "phFEUzi8xfvjaS7XKi5i8VNjXzoDUh326mcJ6SczheBH6"
+  
+  setup_twitter_oauth(consumer_key,consumer_secret,access_token,access_secret)
+  
   
   #### @SAMUEL YOU WILL HAVE TO MANIPULATE HERE SINCE THE INPUT YOU CREATED ABOVE HAVE TO BE REFLECTED HERE IN THE SEARCH TERM ####
+ 
   
-  dataInput <- reactive({searchTwitter(input$text, n = input$Tweets_to_Download) })
+  ############### THIS IS THE REACTIVE FUNCTION ############
+  ##--------------- REPLACE YOUR CODE WITH THIS FUNCTION
+  ###    TO GET THE TWEETS WITH THE UPDATED SEARCH TERM
+  ### Syntax : tweets_r()
+   tweets_r <- reactive({
+    
+    rt = search_tweets(
+      input$text,                ##search query
+      n = input$Tweets_to_Download,             ##Number of results
+      include_rts = FALSE,   ## Dont include retweets if want unique tweets
+      geocode = "3.14032,101.69466,93.5mi"
+    )    
+    saveRDS(rt, "Data/raw.rds")
+    tweeets = readRDS("Data/raw.rds")
+    return(tweeets)
+    
+  })
+
   
-  
-  saveRDS(rt, "Data/raw.rds")
-  tweetsForSentiment <-  readRDS("Data/raw.rds")
-  
-  
-  
-  
-  # 3.0 SENTIMENT ANALYSIS ----
-  
-  ##  3.1 Sentiment Dictionaries
-  get_sentiments(lexicon = "bing")  # Categorical Positive & Negative
-  get_sentiments(lexicon = "afinn") # Assigns polarity
-  
-  ##  3.2 Joining Sentiment Dict with Tokenized Text
-  sentiment_bing <- tweets_tokenized %>% inner_join(get_sentiments("bing"))
-  
-  ##  3.3 Measuring Sentiment
-  
-  ### Overall Sentiment
-  sentiment_bing %>% count(sentiment)
-  
-  ### Sentiment by user
-  sentiment_by_row_id <- sentiment_bing %>%
-    select(-word) %>% 
-    count(rowid, sentiment) %>% 
-    pivot_wider(names_from = sentiment, values_from = n, values_fill =list(n=0)) %>%
-    mutate(sentiment= positive-negative)%>%
-    left_join(
-      tweetsForSentiment %>% select(screen_name, text) %>% rowid_to_column()
-    )
-  
-  
+  #Build value box
+  output$value1 <- renderValueBox({
+    n <- tweets_r() %>% 
+      mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
+      mutate(text = tolower(text)) %>% 
+      unnest_tokens(word, text) %>% 
+      anti_join(stop_words) %>% 
+      inner_join(get_sentiments("bing")) %>% 
+      group_by(word, sentiment) %>% 
+      count(word, sentiment, sort = T) %>% 
+      ungroup() %>% 
+      group_by(sentiment) %>% 
+      summarise(n = sum(n)) %>% 
+      mutate(n = round(n/sum(n), 2)) %>% 
+      filter(sentiment == "positive")
+    
+    n <- n[,2]
+    
+    
+    valueBox(paste(n, "%"), subtitle = "Positive Tweets", 
+             icon = icon("smile", lib ="font-awesome" ), color = "aqua")
+  })
+  output$value2 <- renderValueBox({
+    n <-tweets_r()[,1:16] %>% 
+      mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
+      mutate(text = tolower(text)) %>% 
+      unnest_tokens(word, text) %>% 
+      anti_join(stop_words) %>% 
+      inner_join(get_sentiments("bing")) %>% 
+      group_by(word, sentiment) %>% 
+      count(word, sentiment, sort = T) %>% 
+      ungroup() %>% 
+      group_by(sentiment) %>% 
+      summarise(n = sum(n)) %>% 
+      mutate(n = round(n/sum(n), 2)) %>% 
+      filter(sentiment == "negative")
+    
+    n <- n[,2]
+    valueBox(paste(n, "%"), subtitle = "Negative Tweets", 
+             icon = icon("angry", lib ="font-awesome" ), color = "green")
+  })
+  output$value3 <- renderValueBox({
+    tweets_count <- tweets_r() %>% 
+      nrow()
+    valueBox(tweets_count, subtitle = "Total Tweets", icon = icon("chart-bar", lib ="font-awesome" ), color = "orange")
+  })
   
   
   
   #### @THAYA - BACKEND FOR WORDCLOUD ####
-  
-  
-  
-  
-  
-  #Create reactive word cloud
-  output$wordcloud <- renderPlot({
+    output$wordcloud <- renderPlot({
     
-    ##Tidy Data
-    tweets_tokenized <- tweetsForSentiment %>%
+    tweets_cLOUD <- tweets_r()
+
+    tweets_tokenized <- tweets_cLOUD %>%
       select(text) %>%
       rowid_to_column() %>%
       unnest_tokens(word,text)
     
+    get_sentiments(lexicon = "bing")  # Categorical Positive & Negative
+    get_sentiments(lexicon = "afinn") # Assigns polarity
     
-    ##  3.2 Joining Sentiment Dict with Tokenized Text
+    sentiment_bing <- tweets_tokenized %>% inner_join(get_sentiments("bing"))
+    sentiment_bing %>% count(sentiment)
+    
+    tweets_tokenized <- tweets_cLOUD %>%
+      select(text) %>%
+      rowid_to_column() %>%
+      unnest_tokens(word,text)
+    
     sentiment_bing <-  tweets_tokenized %>% inner_join(get_sentiments("bing"))
-    
-    
     sentiment_by_word <-  sentiment_bing %>% count(word, sentiment, sort=TRUE)
-    
     sentiment_by_word %>%
       slice(1:100) %>%
       mutate(sentiment=factor(sentiment, levels=c("positive", "negative"))) %>%
@@ -231,23 +265,75 @@ server <- function(input, output) {
       scale_color_tq()+
       scale_size_area(max_size=16)+
       labs(tittle ="Sentiment Word Frequency")
-    
-    
   })
   
   
   
   
   #### @THAYA - BACKEND FOR SENTIMENT POLARITY ####
-  output$polarity <- renderPlotly({
-    label_wrap <- label_wrap_gen(width = 60)
+  
+  
+  dataformatted_r <- reactive({
     
-    data_formatted <- sentiment_by_row_id %>%
+    rt = search_tweets(
+      input$text,                ##search query
+      n = 180000,             ##Number of results
+      include_rts = FALSE,   ## Dont include retweets if want unique tweets
+      geocode = "3.14032,101.69466,93.5mi"
+    )    
+    saveRDS(rt, "Data/raw.rds")
+    tweeets = readRDS("Data/raw.rds")
+    
+    
+    
+    label_wrap <- label_wrap_gen(width = 60)
+    ##Tidy Data
+    tweets_tokenized <- tweeets %>%
+      select(text) %>%
+      rowid_to_column() %>%
+      unnest_tokens(word,text)
+    
+    tweets_tokenized %>% count(word,sort=TRUE) # Counting frequency of words
+    
+    # 3.0 SENTIMENT ANALYSIS ----
+    
+    ##  3.1 Sentiment Dictionaries
+    get_sentiments(lexicon = "bing")  # Categorical Positive & Negative
+    get_sentiments(lexicon = "afinn") # Assigns polarity
+    
+    ##  3.2 Joining Sentiment Dict with Tokenized Text
+    sentiment_bing <- tweets_tokenized %>% inner_join(get_sentiments("bing"))
+    
+    ##  3.3 Measuring Sentiment
+    
+    ### Overall Sentiment
+    sentiment_bing %>% count(sentiment)
+    
+    ### Sentiment by user
+    sentiment_by_row_id <- sentiment_bing %>%
+      select(-word) %>% 
+      count(rowid, sentiment) %>% 
+      pivot_wider(names_from = sentiment, values_from = n, values_fill =list(n=0)) %>%
+      mutate(sentiment= positive-negative)%>%
+      left_join(
+        tweeets %>% select(screen_name, text) %>% rowid_to_column()
+      )
+    
+    
+    data_formattedd <- sentiment_by_row_id %>%
       mutate(text_formatted= str_glue("Row ID: {rowid}
                                          Screen Name: (screen_name)
                                          Text:
                                          {label_wrap(text)}"))
-    g <- data_formatted %>%
+    
+    
+    
+    return(data_formattedd)
+  })
+  
+  output$polarity <- renderPlotly({
+    
+    g <- dataformatted_r() %>%
       ggplot(aes(rowid, sentiment))+
       geom_line(color="#2c3e50", alpha=0.5)+
       geom_point(aes(text=text_formatted), color="#2c3e50")+
@@ -275,48 +361,28 @@ server <- function(input, output) {
   
   
   #### @ARINA - BACKEND FOR Table of Tweets ####
-  
-  tweet_table_data <- reactive({
-    req(tweeets)
-    tweeets %>% 
-      rename(user_id = id,
-             created_at = created,
-             screen_name= screenName,
-             favorite_count = favoriteCount,
-             retweet_count = retweetCount,
-             urls_expanded_url = statusSource) %>% 
-      mutate(status_id = user_id) %>% 
-      select(user_id, created_at, status_id, screen_name, text, favorite_count, retweet_count, urls_expanded_url) %>%
-      mutate(
-        Tweet = glue("{text} <a href='https://twitter.com/{screen_name}/status/{status_id}'>>> </a>"),
-        URLs = map_chr(urls_expanded_url, make_url_html)
-      )%>%
-      select(DateTime = created_at, User = screen_name, Tweet, Likes = favorite_count, RTs = retweet_count, URLs)
-  })
-  
-  output$tweet_table <- renderReactable({
-    reactable(tweet_table_data(), 
-              filterable = TRUE, searchable = TRUE, bordered = TRUE, striped = TRUE, highlight = TRUE,
-              showSortable = TRUE, defaultSortOrder = "desc", defaultPageSize = 10, showPageSizeOptions = TRUE, pageSizeOptions = c(10, 50, 75, 100, 200), 
-              columns = list(
-                DateTime = colDef(defaultSortOrder = "asc"),
-                User = colDef(defaultSortOrder = "asc"),
-                Tweet = colDef(html = TRUE, minWidth = 190, resizable = TRUE),
-                Likes = colDef(filterable = FALSE, format = colFormat(separators = TRUE)),
-                RTs = colDef(filterable =  FALSE, format = colFormat(separators = TRUE)),
-                URLs = colDef(html = TRUE)
-              )
-    )
-  })
   #### @ARINA - BACKEND FOR Sentiment Type Bar Plot  ####
   
-  
-  ## @ARINA @JEN Once you have done the backend , make sure you go up to the UI and make sure its reflected on  the UI and it should be reactive ##
-  
+
   
   
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+################################EXTRA PLOTSSSSS ####################
   output$top10 <- renderPlot({
-    topwords <-  tweetsForSentiment[,1:16] %>% 
+    topwords <-  tweets_r()[,1:16] %>% 
       mutate(text = tolower(text)) %>% 
       mutate(text = gsub("rt", "", text)) %>% 
       mutate(text = gsub("https","", text)) %>% 
@@ -342,11 +408,8 @@ server <- function(input, output) {
             axis.text = element_text(face = "bold"))
   })
   
-  
-  
-  
   output$bing <- renderPlot({
-    pos_vs_neg <- tweetsForSentiment[,1:16] %>% 
+    pos_vs_neg <- tweets_r()[,1:16] %>% 
       mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
       mutate(text = tolower(text)) %>% 
       mutate(text = gsub("fidelity", " ", text)) %>% 
@@ -368,14 +431,12 @@ server <- function(input, output) {
     
     
   })
-  
-  
-  
+
   output$NRC <- renderPlot({
     
     nr <- read.csv("nrc.csv")  
     #nrc tweet analysis
-    nrc <- tweeets %>% 
+    nrc <- tweets_r() %>% 
       mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
       mutate(text = tolower(text)) %>% 
       unnest_tokens(word, text) %>% 
@@ -392,68 +453,11 @@ server <- function(input, output) {
             axis.text = element_text(face = "bold"))
   })
   
-  #Build value box
-  output$value1 <- renderValueBox({
-    n <- tweeets %>% 
-      mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
-      mutate(text = tolower(text)) %>% 
-      unnest_tokens(word, text) %>% 
-      anti_join(stop_words) %>% 
-      inner_join(get_sentiments("bing")) %>% 
-      group_by(word, sentiment) %>% 
-      count(word, sentiment, sort = T) %>% 
-      ungroup() %>% 
-      group_by(sentiment) %>% 
-      summarise(n = sum(n)) %>% 
-      mutate(n = round(n/sum(n), 2)) %>% 
-      filter(sentiment == "positive")
-    
-    n <- n[,2]
-    
-    
-    valueBox(paste(n, "%"), subtitle = "Positive Tweets", 
-             icon = icon("smile", lib ="font-awesome" ), color = "aqua")
-  })
   
-  output$value2 <- renderValueBox({
-    n <-tweeets[,1:16] %>% 
-      mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
-      mutate(text = tolower(text)) %>% 
-      unnest_tokens(word, text) %>% 
-      anti_join(stop_words) %>% 
-      inner_join(get_sentiments("bing")) %>% 
-      group_by(word, sentiment) %>% 
-      count(word, sentiment, sort = T) %>% 
-      ungroup() %>% 
-      group_by(sentiment) %>% 
-      summarise(n = sum(n)) %>% 
-      mutate(n = round(n/sum(n), 2)) %>% 
-      filter(sentiment == "negative")
-    
-    n <- n[,2]
-    
-    
-    valueBox(paste(n, "%"), subtitle = "Negative Tweets", 
-             icon = icon("angry", lib ="font-awesome" ), color = "green")
-  })
 
-  
-  output$value3 <- renderValueBox({
-    
-    tweets_count <- tweeets %>% 
-      nrow()
-    
-    
-    valueBox(tweets_count, subtitle = "Total Tweets", 
-             icon = icon("chart-bar", lib ="font-awesome" ), color = "orange")
-  })
-  
   
 }
 
-
-
-####SAM
 
 
 

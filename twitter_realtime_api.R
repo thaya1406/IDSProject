@@ -31,29 +31,6 @@ saveRDS(rt, "Data/raw.rds")
 tweeets = readRDS("Data/raw.rds")
 
 
-
-df_select_tweets<- tweeets %>% 
-  select(
-    c(user_id,
-           created_at,
-           screen_name, 
-           !is.na(hashtags),
-           text, 
-           source,
-           display_text_width>0,
-           lang,
-           !is.na(place_name), 
-           !is.na(place_full_name), 
-           !is.na(geo_coords), 
-           !is.na(country), 
-           !is.na(location),
-           retweet_count,
-           account_created_at,
-           account_lang, 
-           query
-           ) 
-  )
-
 #3.0 RESULTS --------------
 
 tweeets  %>% glimpse()

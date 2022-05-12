@@ -81,3 +81,47 @@ sentiment_by_row_id <- sentiment_bing %>%
 
 # -------- YOUR CODE STARTS HERE ---------
 
+## Table: Sentiment per tweet + retweet_count
+sentiment_by_tweets <- sentiment_by_row_id %>%
+  mutate(Sentiment = if_else(sentiment < 0, "Negative", 
+                             if_else(sentiment == 0, "Neutral", 
+                                     "Positive")) ) %>%
+  left_join(
+    tweetsForSentiment %>% select(retweet_count) %>% rowid_to_column()
+  )%>%
+  select(-rowid, -positive, -negative, -sentiment)
+
+
+## Rename columns in sentiment_by_tweets
+colnames(sentiment_by_tweets) <- c("Username", "Tweets", "Sentiment", "Retweets")
+
+## Formatting table
+sentiment_by_tweets <- sentiment_by_tweets %>%
+  mutate(
+    sentiment_box_color = dplyr::case_when(
+      Sentiment == "Positive" ~ "lightgreen",
+      Sentiment == "Negative" ~ 'tomato',
+      Sentiment == "Neutral" ~ "skyblue",
+      TRUE ~ 'grey')
+  )%>%
+  mutate(
+    sentiment_text_color = dplyr::case_when(
+      Sentiment == "Positive" ~ "darkgreen",
+      Sentiment == "Negative" ~ 'darkred',
+      Sentiment == "Neutral" ~ "#39568CFF",
+      TRUE ~ 'grey')
+  )
+
+n_positive <- length(which(sentiment_by_tweets$Sentiment == "Positive")) 
+n_neutral <- length(which(sentiment_by_tweets$Sentiment == "Neutral"))
+n_negative <- length(which(sentiment_by_tweets$Sentiment == "Negative")) 
+Count <- c(n_positive, n_neutral, n_negative)
+Sentiment <- c("Positive","Neutral","Negative")
+result <- data.frame(Sentiment, Count)
+result$Sentiment <- factor(result$Sentiment, levels = Sentiment)
+
+ggplot(result, aes(x=Sentiment,y=Count))+
+  geom_bar(stat = "identity", aes(fill = Sentiment))+
+  scale_fill_manual("Sentiment", values = c("Positive" = "#06d6a0", "Neutral" = "#64b5f6", "Negative" = "#f38375"))
+
+

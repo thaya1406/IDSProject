@@ -29,11 +29,12 @@ library(ggwordcloud)
 library(tidyverse)
 library(tidyquant)
 
-#value boxes
-
+#Tweet Table
+library(reactablefmtr)
+library(DT)
 
 ui <- dashboardPage(
-  dashboardHeader(title = h4(HTML("Twitter Covid'19 <br/>Sentiment Analysis")), titleWidth = 230,
+  dashboardHeader(title = h4(HTML(" Twitter <br/>Sentiment Analysis")), titleWidth = 230,
                   disable = FALSE),
   
 #### @SAMUEL YOU WILL FOCUS HERE FOR CREATING THE INPUT ####
@@ -119,16 +120,27 @@ ui <- dashboardPage(
                    
                  )),
       ),
-      tabPanel(title = "Tweet Table",
-               fluidRow(
-                 valueBoxOutput("value4"),
-                 valueBoxOutput("value5"),
-                 valueBoxOutput("value6")),
-               fluidRow(
-                 valueBoxOutput("value7"),
-                 valueBoxOutput("value8"),
-                 valueBoxOutput("value9")),
-               fluidRow(reactableOutput("tweet_table"))),
+      tabPanel(title = "Tweets Status",
+               fluidRow(  
+                 box(
+                   title = "Sentiment Type Summary"
+                   ,width = 12
+                   ,status = "primary"
+                   ,solidHeader = TRUE 
+                   ,collapsible = TRUE
+                   ,plotOutput("sentimenttype", height = "450px")
+                 )),
+               fluidRow(  
+                 box(
+                   title = "Table of Tweets"
+                   ,helpText("Tips : Click the column header to sort a column.")
+                   ,width = 12
+                   ,status = "primary"
+                   ,solidHeader = TRUE 
+                   ,collapsible = TRUE
+                   ,reactableOutput("tweettable")
+                 )),
+      ),
       tabPanel(title = "About App",
                tags$div( id = 'ci_intel_by_hs_hstable' ,
                          fluidRow( h3( style="color:#cc4c02",HTML("<b>Twitter Sentiment Analysis Shiny App</b>")),
@@ -277,7 +289,7 @@ server <- function(input, output,session) {
     
     rt = search_tweets(
       input$text,                ##search query
-      n = 180000,             ##Number of results
+      n = input$Tweets_to_Download,  ##Number of results
       include_rts = FALSE,   ## Dont include retweets if want unique tweets
       geocode = "3.14032,101.69466,93.5mi"
     )    
@@ -361,8 +373,120 @@ server <- function(input, output,session) {
   
   
   #### @ARINA - BACKEND FOR Table of Tweets ####
+  tweettable_r <- reactive({
+    
+    rt = search_tweets(
+      input$text,                ##search query
+      n = input$Tweets_to_Download,             ##Number of results
+      include_rts = FALSE,   ## Dont include retweets if want unique tweets
+      geocode = "3.14032,101.69466,93.5mi"
+    )    
+    saveRDS(rt, "Data/raw.rds")
+    tweeets = readRDS("Data/raw.rds")
+    
+    
+    
+    label_wrap <- label_wrap_gen(width = 60)
+    ##Tidy Data
+    tweets_tokenized <- tweeets %>%
+      select(text) %>%
+      rowid_to_column() %>%
+      unnest_tokens(word,text)
+    
+    tweets_tokenized %>% count(word,sort=TRUE) # Counting frequency of words
+    
+    # 3.0 SENTIMENT ANALYSIS ----
+    
+    ##  3.1 Sentiment Dictionaries
+    get_sentiments(lexicon = "bing")  # Categorical Positive & Negative
+    get_sentiments(lexicon = "afinn") # Assigns polarity
+    
+    ##  3.2 Joining Sentiment Dict with Tokenized Text
+    sentiment_bing <- tweets_tokenized %>% inner_join(get_sentiments("bing"))
+    
+    ##  3.3 Measuring Sentiment
+    
+    ### Overall Sentiment
+    sentiment_bing %>% count(sentiment)
+    
+    ### Sentiment by user
+    sentiment_by_row_id <- sentiment_bing %>%
+      select(-word) %>% 
+      count(rowid, sentiment) %>% 
+      pivot_wider(names_from = sentiment, values_from = n, values_fill =list(n=0)) %>%
+      mutate(sentiment= positive-negative)%>%
+      left_join(
+        tweeets %>% select(screen_name, text) %>% rowid_to_column()
+      )
+    
+    ## Start modification:
+    ## Table: Sentiment per tweet + retweet_count
+    sentiment_by_tweets <- sentiment_by_row_id %>%
+      mutate(Sentiment = if_else(sentiment < 0, "Negative", 
+                                 if_else(sentiment == 0, "Neutral", 
+                                         "Positive")) ) %>%
+      left_join(
+        tweets_r() %>% select(retweet_count) %>% rowid_to_column()
+      )%>%
+      select(-rowid, -positive, -negative, -sentiment)
+    
+    
+    ## Rename columns in sentiment_by_tweets
+    colnames(sentiment_by_tweets) <- c("Username", "Tweets", "Sentiment", "Retweets")
+    
+    ## Formatting table
+    sentiment_by_tweets <- sentiment_by_tweets %>%
+      mutate(
+        sentiment_box_color = dplyr::case_when(
+          Sentiment == "Positive" ~ "lightgreen",
+          Sentiment == "Negative" ~ 'tomato',
+          Sentiment == "Neutral" ~ "skyblue",
+          TRUE ~ 'grey')
+      )%>%
+      mutate(
+        sentiment_text_color = dplyr::case_when(
+          Sentiment == "Positive" ~ "darkgreen",
+          Sentiment == "Negative" ~ 'darkred',
+          Sentiment == "Neutral" ~ "#39568CFF",
+          TRUE ~ 'grey')
+      )
+    
+    return(sentiment_by_tweets)
+  })
+  
+  output$tweettable <- renderReactable({
+    tweettable_r() %>%
+      reactable(
+        columns = list(
+          sentiment_box_color = colDef(show = FALSE),
+          sentiment_text_color = colDef(show = FALSE),
+          Username = colDef(
+            style = list(color = "grey", fontFamily = "Menlo")
+          ),
+          Sentiment = colDef(
+            cell = color_tiles(., color_ref = "sentiment_box_color",text_color_ref = "sentiment_text_color", opacity = 0.5)
+          )
+        ),
+        searchable = TRUE
+      )
+  })
+  
+  
   #### @ARINA - BACKEND FOR Sentiment Type Bar Plot  ####
   
+  output$sentimenttype <- renderPlot ({
+    n_positive <- length(which(tweettable_r()$Sentiment == "Positive")) 
+    n_neutral <- length(which(tweettable_r()$Sentiment == "Neutral"))
+    n_negative <- length(which(tweettable_r()$Sentiment == "Negative")) 
+    Count <- c(n_positive, n_neutral, n_negative)
+    Sentiment <- c("Positive","Neutral","Negative")
+    result <- data.frame(Sentiment, Count)
+    result$Sentiment <- factor(result$Sentiment, levels = Sentiment)
+    ggplot(result, aes(x=Sentiment,y=Count))+
+      geom_bar(stat = "identity", aes(fill = Sentiment))+
+      scale_fill_manual("Sentiment", values = c("Positive" = "#06d6a0", "Neutral" = "#64b5f6", "Negative" = "#f38375"))
+    
+  })
 
   
   

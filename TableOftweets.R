@@ -12,6 +12,8 @@ library(ggwordcloud)
 library(tidyverse)
 library(tidyquant)
 
+## Table
+library(reactablefmtr)
 
 # 1.0 ACCOUNT SETUP --------------
 library(rtweet)
@@ -81,3 +83,47 @@ sentiment_by_row_id <- sentiment_bing %>%
 
 # -------- YOUR CODE STARTS HERE ---------
 
+## Table: Sentiment per tweet + retweet_count
+sentiment_by_tweets <- sentiment_by_row_id %>%
+  mutate(Sentiment = if_else(sentiment < 0, "Negative", 
+                             if_else(sentiment == 0, "Neutral", 
+                                     "Positive")) ) %>%
+  left_join(
+    tweetsForSentiment %>% select(retweet_count) %>% rowid_to_column()
+  )%>%
+  select(-rowid, -positive, -negative, -sentiment)
+
+
+## Rename columns in sentiment_by_tweets
+colnames(sentiment_by_tweets) <- c("Username", "Tweets", "Sentiment", "Retweets")
+
+## Formatting table
+sentiment_by_tweets <- sentiment_by_tweets %>%
+  mutate(
+    sentiment_box_color = dplyr::case_when(
+      Sentiment == "Positive" ~ "lightgreen",
+      Sentiment == "Negative" ~ 'tomato',
+      Sentiment == "Neutral" ~ "skyblue",
+      TRUE ~ 'grey')
+  )%>%
+  mutate(
+    sentiment_text_color = dplyr::case_when(
+      Sentiment == "Positive" ~ "darkgreen",
+      Sentiment == "Negative" ~ 'darkred',
+      Sentiment == "Neutral" ~ "#39568CFF",
+      TRUE ~ 'grey')
+  )
+
+sentiment_by_tweets %>%
+  reactable(
+    columns = list(
+      sentiment_box_color = colDef(show = FALSE),
+      sentiment_text_color = colDef(show = FALSE),
+      Username = colDef(
+        style = list(color = "grey", fontFamily = "Menlo")
+      ),
+      Sentiment = colDef(
+        cell = color_tiles(., color_ref = "sentiment_box_color",text_color_ref = "sentiment_text_color", opacity = 0.5)
+      )
+    )
+  ) 

@@ -40,23 +40,38 @@ ui <- dashboardPage(
 #### @SAMUEL YOU WILL FOCUS HERE FOR CREATING THE INPUT ####
   dashboardSidebar(
     sidebarPanel(
+
+##This one is the number of tweets to be downloaded
       h5(style="color:#cc4c02", sliderInput("Tweets_to_Download",
                                             "No of Tweets to Download:",
                                             min = 500,
                                             max = 18000,
                                             value = 500,
                                             step = 500)),
+##This one is for the user to key in the value
     fluidPage(style="color:#cc4c02",
       textInput("caption", "Key-in your word or Hashtags", "I love Dr. Sal!"),
-      verbatimTextOutput("value"))
-    , width = 0.3)
+      verbatimTextOutput("value")), 
+
+##This one is for the user to key in the location. I have already put one R file that shows the ggplot of the country shape in the repository for reference. I think 
+##I will be using that ggplot to show below this sidebarPanel, if possible. 
+        fluidPage(style="color:#cc4c02",
+          selectInput("state", "Location",
+                      list(`North America` = list("United States of America", "Canada", "Mexico", "Greenland", "Cuba"),
+                           `South America` = list("Brazil", "Argentina", "Colombia", "Peru", "Chile", "Venezuela"),
+                           `Europe` = list("United Kingdom", "Spain", "Germany", "Italy", "France", "Netherlands"),
+                           `Asia` = list("Malaysia", "Singapore", "China", "Japan", "South Korea", "Indonesia", "Afghanistan"),
+                           `Africa` = list("South Africa", "Nigeria", "Kenya", "Ghana", "Morocco"),
+                           `Oceania` = list("New Zealand", "Australia", "Fiji", "Papua New Guinea"))
+          ),
+          textOutput("result")
+        ), 
+        width = 0.3)
   ), 
 
 
   
 #### @SAMUEL YOUR FOCUS HERE FOR CREATING THE INPUT ENDS HERE ####
-
-
 
 
   dashboardBody(

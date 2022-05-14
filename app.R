@@ -46,10 +46,13 @@ ui <- dashboardPage(
                                             max = 18000,
                                             value = 500,
                                             step = 500)),
-      h6(style = "color:#006d2c", textInput("text", h3("Text input"), 
-                                            value = "najib"))
-      , width = 0.3)
-  ),
+    fluidPage(style="color:#cc4c02",
+      textInput("caption", "Key-in your word or Hashtags", "I love Dr. Sal!"),
+      verbatimTextOutput("value"))
+    , width = 0.3)
+  ), 
+
+
   
 #### @SAMUEL YOUR FOCUS HERE FOR CREATING THE INPUT ENDS HERE ####
 

@@ -1,10 +1,11 @@
+##libraries needed
 library(ggplot2)
 library(sf)
 library(rnaturalearth)
 
 input_read <- readline(prompt = "Enter Name: ") ##Need to execute this line first
 
-##Then only these statement is alright
+##Then only run these statements, so like two separate runtimes are needed
 if (is.character(input_read)) {
 
 worldmap <- ne_countries(scale = 'medium', type = 'map_units',

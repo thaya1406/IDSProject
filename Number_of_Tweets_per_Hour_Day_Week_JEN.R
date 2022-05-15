@@ -27,20 +27,20 @@ token <- create_token(
 
 
 rt = search_tweets(
-  "Bonia",                ##search query
+  input$text,                ##search query
   n = 180000,             ##Number of results
   include_rts = FALSE,   ## Dont include retweets if want unique tweets
   geocode = "3.14032,101.69466,93.5mi"
 )                  
 
 #SAVING THE TWEETS
-saveRDS(rt, "data/raw.rds")
-tweeets = readRDS("data/raw.rds")
+saveRDS(rt, "Data/raw.rds")
+tweeets = readRDS("Data/raw.rds")
 
 
 
 # 2.0 TIDY TEXT ----
-tweetsForSentiment = readRDS("data/raw.rds")
+tweetsForSentiment = readRDS("Data/raw.rds")
 
 ##Tidy Data
 tweets_tokenized <- tweetsForSentiment %>%
@@ -73,9 +73,32 @@ sentiment_by_row_id <- sentiment_bing %>%
   mutate(sentiment= positive-negative)%>%
   left_join(
     tweetsForSentiment %>% select(screen_name, text) %>% rowid_to_column()
-  )
+  ) 
 
 ##### FROM MY UNDERSTANDING YOU WONT HAVE TO DEAL WITH THE SENTIMENT , JUST THE RAW DATA WHICH IS THE TWEETS , BUT IM STILL PUTTING IT ABOVE INCASE YOU WOULD LIKE TO EXPLORE  ####
 
 # -------- YOUR CODE STARTS HERE ---------
+library(ggplot2)
+
+ts_plot(tweeets, by = "hours", ) +
+  labs(x = NULL, y = NULL,
+       title = "Number of tweets per hour",
+       caption = "Data collected from Twitter's REST API via rtweet") +
+  theme_minimal()
+
+ts_plot(tweeets, by ="days") +
+  labs(x = NULL, y = NULL,
+       title = "Number of tweets per day",
+       subtitle = paste0(format(min(tweeets$created_at), "%d %B"), " to ", format(max(tweeets$created_at),"%d %B")),
+       caption = "Data collected from Twitter's REST API via rtweet") +
+  theme_minimal()
+
+ts_plot(tweeets, by ="weeks") +
+  labs(x = NULL, y = NULL,
+       title = "Number of tweets per week",
+       subtitle = paste0(format(min(tweeets$created_at), "%d %B"), " to ", format(max(tweeets$created_at),"%d %B")),
+       caption = "Data collected from Twitter's REST API via rtweet") +
+  theme_minimal()
+
+
 

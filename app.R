@@ -43,6 +43,39 @@ library(rtweet)
 library(tidytext)
 
 
+
+#HIGHSCORE
+library(shinycssloaders)
+library(shiny)
+library(shinydashboard)
+library(forcats)
+library(ggplot2)
+library(plotly)
+library(lubridate)
+library(stringr)
+library(tidyr)
+library(purrr)
+library(dplyr)
+library(shinycssloaders)
+
+TOPIC <- list(
+  # Name of the conference or topic, for use in descriptive text
+  name             = "rstudio::conf",
+  # Name of the full Twitter community, for use in descriptive text
+  full_community   = "#rstats",
+  # Terms related to the topic that must be included in topical tweet text
+  terms            = c("rstudioconf", "rstudio conf", "rstudio::conf", "rstudiconf", "rstduioconf"),
+  # Hashtags to exclude from the Top 10 Hashtags list (because they're implied by the topic)
+  hashtag_exclude  = "rstudio?conf|rstduioconf|rstats|rstudio conf",
+  # Words to exclude from the Top 10 Words list (because they're implied by the topic)
+  wordlist_exclude = "rstudio|conf|rstats"
+)
+
+
+# ---- Color Helpers ----
+BASIC_COLORS <- c("primary", "info", "success", "danger", "warning")
+
+
 ui <- dashboardPage(
   dashboardHeader(title = h4(HTML("BrandAnalyzer : Discover your online presence")), titleWidth = 230,
                   disable = FALSE),
@@ -60,7 +93,7 @@ ui <- dashboardPage(
                                             step = 500)),
 ##This one is for the user to key in the value
         fluidPage(style="color:#cc4c02",
-          textInput("caption", "Key-in your word or Hashtags", "love"),
+          textInput("caption", "Key-in your word or Hashtags", "najib"),
           verbatimTextOutput("value")), 
 
         fluidPage(style="color:#cc4c02",
@@ -237,6 +270,49 @@ ui <- dashboardPage(
                  )),
                
       ),
+      
+      tabPanel(
+        "High Scores",
+        fluidRow(
+          box(
+            width = "6 col-lg-3",
+            status = "info",
+            title = "Top Tweeters",
+            tags$div(
+              class = "scroll-overflow-x",
+              withSpinner(uiOutput("top_tweeters"))
+            ),
+            helpText("Weighted average of RT (2x) and favorites (1x) per tweet")
+          ),
+          box(
+            width = "6 col-lg-3",
+            status = "danger",
+            title = "Top Hashtags",
+            withSpinner(uiOutput("top_hashtags")),
+            helpText("Times hashtag was used relative to most popular hashtag, excludes",
+                     tags$code(TOPIC$name),
+                     if (!is.null(TOPIC$full_community)) paste(
+                       "and", tags$code(TOPIC$full_community))
+            )
+          ),
+          box(
+            width = "6 col-lg-3",
+            status = "warning",
+            title = "Top Words",
+            withSpinner(uiOutput("top_tweet_words")),
+            helpText("Times word was used relative to most popular word")
+          ),
+          box(
+            width = "6 col-lg-3",
+            status = "success",
+            title = "Top Emoji",
+            withSpinner(uiOutput("top_emojis")),
+            helpText("Times emoji was used relative to most used emoji")
+          )
+        )
+        ),
+      
+      
       tabPanel(title = "About App",
                tags$div( id = 'ci_intel_by_hs_hstable' ,
                          fluidRow( h3( style="color:#cc4c02",HTML("<b>BrandAnalyzer : Discover your online presence !</b>")),
@@ -248,8 +324,12 @@ ui <- dashboardPage(
                                              
                                                 An interactive plot, that presents the guiding statement, tweet author and link to the page of twitter itself.
                                                 ")))
-               ))
-    )))
+               )#tagsDiv
+               
+               )#tabPanel
+    )#tabsetPanel
+    )#dashboardBody
+)#dashboardPage
 
 
 
@@ -465,59 +545,11 @@ In the next chapter, we’ll move on to the back end of a Shiny app: the R code 
   
   #### @JEN - BACKEND FOR Number of tweets per ####
   
-  rt = search_tweets(
-    input$text,                ##search query
-    n = 180000,             ##Number of results
-    include_rts = FALSE,   ## Dont include retweets if want unique tweets
-    geocode = "3.14032,101.69466,93.5mi"
-  )                  
-  
-  #SAVING THE TWEETS
-  saveRDS(rt, Data/raw.rds")
-  tweeets = readRDS("Data/raw.rds")
-  
-  
-  
-  # 2.0 TIDY TEXT ----
-  tweetsForSentiment = readRDS("Data/raw.rds")
-  
-  ##Tidy Data
-  tweets_tokenized <- tweetsForSentiment %>%
-    select(text) %>%
-    rowid_to_column() %>%
-    unnest_tokens(word,text)
-  
-  # Counting frequency of words
-  tweets_tokenized %>% count(word,sort=TRUE) 
-  
-  # 3.0 SENTIMENT ANALYSIS ----
-  
-  ##  3.1 Sentiment Dictionaries
-  get_sentiments(lexicon = "bing")  # Categorical Positive & Negative
-  get_sentiments(lexicon = "afinn") # Assigns polarity
-  
-  ##  3.2 Joining Sentiment Dict with Tokenized Text
-  sentiment_bing <- tweets_tokenized %>% inner_join(get_sentiments("bing"))
-  
-  ##  3.3 Measuring Sentiment
-  
-  ### Overall Sentiment
-  sentiment_bing %>% count(sentiment)
-  
-  ### Sentiment by user
-  sentiment_by_row_id <- sentiment_bing %>%
-    select(-word) %>% 
-    count(rowid, sentiment) %>% 
-    pivot_wider(names_from = sentiment, values_from = n, values_fill =list(n=0)) %>%
-    mutate(sentiment= positive-negative)%>%
-    left_join(
-      tweetsForSentiment %>% select(screen_name, text) %>% rowid_to_column()
-    ) 
-  
-  library(ggplot2)
-  
+
   output$No_of_tweets_hour <- renderPlot({
-  ts_plot(tweeets, by = "hours", ) +
+    tweeets <- tweets_r()
+    
+  ts_plot(tweeets, by = "hours",xtime ="%F %H:%S") +
     labs(x = NULL, y = NULL,
          title = "Number of tweets per hour",
          caption = "Data collected from Twitter's REST API via rtweet") +
@@ -525,6 +557,8 @@ In the next chapter, we’ll move on to the back end of a Shiny app: the R code 
   })
   
   output$No_of_tweets_day <- renderPlot({
+    tweeets <- tweets_r()
+    
   ts_plot(tweeets, by ="days") +
     labs(x = NULL, y = NULL,
          title = "Number of tweets per day",
@@ -534,6 +568,8 @@ In the next chapter, we’ll move on to the back end of a Shiny app: the R code 
   })
   
   output$No_of_tweets_week <- renderPlot({
+    tweeets <- tweets_r()
+    
   ts_plot(tweeets, by ="weeks") +
     labs(x = NULL, y = NULL,
          title = "Number of tweets per week",
@@ -781,7 +817,107 @@ In the next chapter, we’ll move on to the back end of a Shiny app: the R code 
   })
   
   
-
+  
+  ################HIGH SCOREEEEE ########################
+  
+  output$top_emojis <- renderUI({
+    emoji_regex <- "[\\uD83C-\\uDBFF\\uDC00-\\uDFFF\u2600-\u27ff]+"
+    
+    twe <- tweets_r() %>%
+      select(text) %>%
+      tidytext::unnest_tokens(text, text, token = "tweets") %>%
+      filter(str_detect(text, emoji_regex)) %>%
+      mutate(text = str_remove_all(text, "\\w")) %>%
+      tidytext::unnest_tokens(text, text, token = "characters") %>%
+      count(text, sort = TRUE) %>%
+      inner_join(emo::jis %>% select(runes, emoji, name), by = c("text" = "emoji")) %>%
+      filter(!str_detect(runes, "^1F3F[B-F]$")) %>%
+      slice(1:10) %>%
+      mutate(
+        b = n,
+        # use twemoji
+        runes = str_replace(tolower(runes), " ", "-"),
+        runes = twemoji(runes)
+      )
+    
+    colors <- rep(BASIC_COLORS[1:5], 2)
+    
+    tags$div(
+      map(seq_len(min(10, nrow(twe))), ~ {
+        progressGroup(HTML(twe$runes[[.x]]), twe$n[[.x]], max = max(twe$n), color = colors[.x])
+      })
+    )
+  })
+  
+  output$top_hashtags <- renderUI({
+    twh <-
+      tweets_r() %>%
+      select(hashtags) %>%
+      unnest() %>%
+      count(hashtags, sort = TRUE) %>%
+      filter(!is.na(hashtags)) %>%
+      filter(!str_detect(tolower(hashtags), TOPIC$hashtag_exclude)) %>%
+      mutate(hashtags = paste0("#", hashtags))
+    
+    colors <- rep(BASIC_COLORS[1:5], 2)
+    
+    tags$div(
+      map(seq_len(min(10, nrow(twh))), ~ {
+        progressGroup(twh$hashtags[[.]], twh$n[[.]], max = max(twh$n), color = colors[.])
+      })
+    )
+  })
+  
+  output$top_tweeters <- renderUI({
+    tweets_r() %>%
+      group_by(screen_name, profile_url, profile_image_url) %>%
+      summarize(engagement = (sum(retweet_count) * 2 + sum(favorite_count)) / n()) %>%
+      arrange(desc(engagement)) %>%
+      ungroup() %>%
+      slice(1:10) %>%
+      select(screen_name, engagement) %>%
+      knitr::kable(
+        format = "html",
+        escape = FALSE,
+        align = "cll",
+        col.names = c("Screen Name", "Engagement/Tweet "),
+        table.attr = 'class = "table"'
+      ) %>%
+      HTML()
+  })
+  
+  output$top_tweet_words <- renderUI({
+    tw <- tweets_r() %>%
+      select(text) %>%
+      mutate(
+        text = str_remove_all(text, "@[[:alnum:]_]+\\b"),
+        text = str_remove_all(text, "&\\w+;")
+      ) %>%
+      tidytext::unnest_tokens(word, text) %>%
+      filter(
+        !word %in% c("http", "https", "t.co"),
+        !str_detect(word, TOPIC$wordlist_exclude),
+        nchar(word) >= 3
+      ) %>%
+      anti_join(tidytext::stop_words, by = "word") %>%
+      count(word, sort = TRUE) %>%
+      slice(1:10)
+    
+    colors <- rep(BASIC_COLORS[1:5], 2)
+    
+    tags$div(
+      map(seq_len(min(10, nrow(tw))), ~ {
+        progressGroup(tw$word[[.]], tw$n[[.]], max = max(tw$n), color = colors[.])
+      })
+    )
+  })
+  
+  
+  
+  
+  
+  
+  
   
 }
 

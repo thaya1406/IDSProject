@@ -207,6 +207,36 @@ ui <- dashboardPage(
                    ,reactableOutput("tweettable")
                  )),
       ),
+      tabPanel(title = "Number of tweets",
+               fluidRow(
+                 box(
+                   title = "Number of tweets per hour",
+                   width = 12,
+                   status = "primary",
+                   solidHeader = TRUE,
+                   collapsible = TRUE,
+                   plotOutput("No_of_tweets_hour", height = "300px")
+                 )),
+               fluidRow(
+                 box(
+                   title = "Number of tweet per day",
+                   width = 12,
+                   status = "primary",
+                   solidHeader = TRUE,
+                   collapsible = TRUE,
+                   plotOutput("No_of_tweets_day", height = "300px")
+                 )),
+               fluidRow(
+                 box(
+                   title = "Number of tweets per week",
+                   width = 12,
+                   status = "primary",
+                   solidHeader = TRUE,
+                   collapsible = TRUE,
+                   plotOutput("No_of_tweets_week", height = "300px")
+                 )),
+               
+      ),
       tabPanel(title = "About App",
                tags$div( id = 'ci_intel_by_hs_hstable' ,
                          fluidRow( h3( style="color:#cc4c02",HTML("<b>BrandAnalyzer : Discover your online presence !</b>")),
@@ -434,8 +464,85 @@ In the next chapter, we’ll move on to the back end of a Shiny app: the R code 
   
   
   #### @JEN - BACKEND FOR Number of tweets per ####
-  #### @JEN - BACKEND FOR Generate Report for the day/week ####
   
+  rt = search_tweets(
+    input$text,                ##search query
+    n = 180000,             ##Number of results
+    include_rts = FALSE,   ## Dont include retweets if want unique tweets
+    geocode = "3.14032,101.69466,93.5mi"
+  )                  
+  
+  #SAVING THE TWEETS
+  saveRDS(rt, Data/raw.rds")
+  tweeets = readRDS("Data/raw.rds")
+  
+  
+  
+  # 2.0 TIDY TEXT ----
+  tweetsForSentiment = readRDS("Data/raw.rds")
+  
+  ##Tidy Data
+  tweets_tokenized <- tweetsForSentiment %>%
+    select(text) %>%
+    rowid_to_column() %>%
+    unnest_tokens(word,text)
+  
+  # Counting frequency of words
+  tweets_tokenized %>% count(word,sort=TRUE) 
+  
+  # 3.0 SENTIMENT ANALYSIS ----
+  
+  ##  3.1 Sentiment Dictionaries
+  get_sentiments(lexicon = "bing")  # Categorical Positive & Negative
+  get_sentiments(lexicon = "afinn") # Assigns polarity
+  
+  ##  3.2 Joining Sentiment Dict with Tokenized Text
+  sentiment_bing <- tweets_tokenized %>% inner_join(get_sentiments("bing"))
+  
+  ##  3.3 Measuring Sentiment
+  
+  ### Overall Sentiment
+  sentiment_bing %>% count(sentiment)
+  
+  ### Sentiment by user
+  sentiment_by_row_id <- sentiment_bing %>%
+    select(-word) %>% 
+    count(rowid, sentiment) %>% 
+    pivot_wider(names_from = sentiment, values_from = n, values_fill =list(n=0)) %>%
+    mutate(sentiment= positive-negative)%>%
+    left_join(
+      tweetsForSentiment %>% select(screen_name, text) %>% rowid_to_column()
+    ) 
+  
+  library(ggplot2)
+  
+  output$No_of_tweets_hour <- renderPlot({
+  ts_plot(tweeets, by = "hours", ) +
+    labs(x = NULL, y = NULL,
+         title = "Number of tweets per hour",
+         caption = "Data collected from Twitter's REST API via rtweet") +
+    theme_minimal()
+  })
+  
+  output$No_of_tweets_day <- renderPlot({
+  ts_plot(tweeets, by ="days") +
+    labs(x = NULL, y = NULL,
+         title = "Number of tweets per day",
+         subtitle = paste0(format(min(tweeets$created_at), "%d %B"), " to ", format(max(tweeets$created_at),"%d %B")),
+         caption = "Data collected from Twitter's REST API via rtweet") +
+    theme_minimal()
+  })
+  
+  output$No_of_tweets_week <- renderPlot({
+  ts_plot(tweeets, by ="weeks") +
+    labs(x = NULL, y = NULL,
+         title = "Number of tweets per week",
+         subtitle = paste0(format(min(tweeets$created_at), "%d %B"), " to ", format(max(tweeets$created_at),"%d %B")),
+         caption = "Data collected from Twitter's REST API via rtweet") +
+    theme_minimal()
+  })
+  
+  #### @JEN - BACKEND FOR Generate Report for the day/week ####
   
   #### @ARINA - BACKEND FOR Table of Tweets ####
   tweettable_r <- reactive({

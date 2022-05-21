@@ -58,19 +58,6 @@ library(purrr)
 library(dplyr)
 library(shinycssloaders)
 
-TOPIC <- list(
-  # Name of the conference or topic, for use in descriptive text
-  name             = "rstudio::conf",
-  # Name of the full Twitter community, for use in descriptive text
-  full_community   = "#rstats",
-  # Terms related to the topic that must be included in topical tweet text
-  terms            = c("rstudioconf", "rstudio conf", "rstudio::conf", "rstudiconf", "rstduioconf"),
-  # Hashtags to exclude from the Top 10 Hashtags list (because they're implied by the topic)
-  hashtag_exclude  = "rstudio?conf|rstduioconf|rstats|rstudio conf",
-  # Words to exclude from the Top 10 Words list (because they're implied by the topic)
-  wordlist_exclude = "rstudio|conf|rstats"
-)
-
 
 # ---- Color Helpers ----
 BASIC_COLORS <- c("primary", "info", "success", "danger", "warning")
@@ -174,14 +161,14 @@ ui <- dashboardPage(
                    ,status = "primary"
                    ,solidHeader = TRUE 
                    ,collapsible = TRUE
-                   ,plotOutput("wordcloud", height = "300px")
+                   ,withSpinner(plotOutput("wordcloud", height = "300px"))
                  ),
                  box(
                    title = "Top 10 words"
                    ,status = "primary"
                    ,solidHeader = TRUE 
                    ,collapsible = TRUE 
-                   ,plotOutput("top10", height = "300px")
+                   ,withSpinner(plotOutput("top10", height = "300px"))
                  )),
                fluidRow(
                  box(
@@ -189,14 +176,14 @@ ui <- dashboardPage(
                    status = "primary",
                    solidHeader = TRUE,
                    collapsible = TRUE,
-                   plotOutput("bing", height = "300px")
+                   withSpinner(plotOutput("bing", height = "300px"))
                  ),
                  box(
                    title = "Types of Sentiments Found",
                    status = "primary",
                    solidHeader = TRUE,
                    collapsible = TRUE,
-                   plotOutput("NRC", height = "300px")
+                   withSpinner(plotOutput("NRC", height = "300px"))
                  )),
                fluidRow(  
                  box(
@@ -205,7 +192,7 @@ ui <- dashboardPage(
                    ,status = "primary"
                    ,solidHeader = TRUE 
                    ,collapsible = TRUE
-                   ,plotOutput("sentimenttype", height = "450px")
+                   ,withSpinner(plotOutput("sentimenttype", height = "450px"))
                  )),
                fluidRow(
                  box(
@@ -213,7 +200,7 @@ ui <- dashboardPage(
                    width = 12,
                    solidHeader = TRUE,
                    collapsible = TRUE,
-                   plotlyOutput("polarity", height = "300px")
+                   withSpinner(plotlyOutput("polarity", height = "300px"))
                    
                  )),
            
@@ -226,7 +213,7 @@ ui <- dashboardPage(
                    ,status = "primary"
                    ,solidHeader = TRUE 
                    ,collapsible = TRUE
-                   ,leafletOutput("geoTaggedTweets")
+                   ,withSpinner(leafletOutput("geoTaggedTweets"))
 
                  )),
                fluidRow(  
@@ -237,7 +224,7 @@ ui <- dashboardPage(
                    ,status = "primary"
                    ,solidHeader = TRUE 
                    ,collapsible = TRUE
-                   ,reactableOutput("tweettable")
+                   ,withSpinner(reactableOutput("tweettable"))
                  )),
       ),
       tabPanel(title = "Number of tweets",
@@ -248,7 +235,7 @@ ui <- dashboardPage(
                    status = "primary",
                    solidHeader = TRUE,
                    collapsible = TRUE,
-                   plotOutput("No_of_tweets_hour", height = "300px")
+                   withSpinner(plotOutput("No_of_tweets_hour", height = "300px"))
                  )),
                fluidRow(
                  box(
@@ -257,7 +244,7 @@ ui <- dashboardPage(
                    status = "primary",
                    solidHeader = TRUE,
                    collapsible = TRUE,
-                   plotOutput("No_of_tweets_day", height = "300px")
+                   withSpinner(plotOutput("No_of_tweets_day", height = "300px"))
                  )),
                fluidRow(
                  box(
@@ -266,7 +253,7 @@ ui <- dashboardPage(
                    status = "primary",
                    solidHeader = TRUE,
                    collapsible = TRUE,
-                   plotOutput("No_of_tweets_week", height = "300px")
+                   withSpinner(plotOutput("No_of_tweets_week", height = "300px"))
                  )),
                
       ),
@@ -311,6 +298,17 @@ ui <- dashboardPage(
           )
         )
         ),
+      tabPanel(
+        "Tweet Wall",
+        
+        
+        
+        
+        
+        
+        
+      ),
+      
       
       
       tabPanel(title = "About App",

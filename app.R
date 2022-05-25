@@ -23,6 +23,7 @@ library(tidyquant)
 library(plotly)
 library(ggplot2)
 library(plotly)
+library(ggwordcloud)
 
 
 #Tweet Table

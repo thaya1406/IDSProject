@@ -27,7 +27,7 @@ token <- create_token(
 
 
 rt = search_tweets(
-  input$text,                ##search query
+  "najib",                ##search query
   n = 180000,             ##Number of results
   include_rts = FALSE,   ## Dont include retweets if want unique tweets
   geocode = "3.14032,101.69466,93.5mi"

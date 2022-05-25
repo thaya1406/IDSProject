@@ -5,29 +5,25 @@ library(shiny)
 library(rtweet)
 library(reactable)
 library(reshape2)
-library(tidyverse)
-library(tidytext)
 library(RColorBrewer)
 library(shinydashboard)
-library(twitteR)
 library(ROAuth)
 library(plotly)
 library(glue)
 library(twitteR)
 library(rvest)
-library(wordcloud2)
-library(textdata)
+
 ##TEXT
 library(tidytext)
 library(textdata)
+library(tidyverse)
+library(tidyquant)
 
 ##Visualization
 library(plotly)
-library(ggwordcloud)
+library(ggplot2)
+library(plotly)
 
-##Text
-library(tidyverse)
-library(tidyquant)
 
 #Tweet Table
 library(reactablefmtr)
@@ -35,22 +31,14 @@ library(DT)
 
 
 #GeoTagging
-library(tidyverse)
 library(sf)
 library(leaflet)
 library(tigris)
 library(rtweet)
-library(tidytext)
-
 
 
 #HIGHSCORE
-library(shinycssloaders)
-library(shiny)
-library(shinydashboard)
 library(forcats)
-library(ggplot2)
-library(plotly)
 library(lubridate)
 library(stringr)
 library(tidyr)
@@ -59,15 +47,12 @@ library(dplyr)
 library(shinycssloaders)
 
 
-# ---- Color Helpers ----
-BASIC_COLORS <- c("primary", "info", "success", "danger", "warning")
 
 
 ui <- dashboardPage(
   dashboardHeader(title = h4(HTML("BrandAnalyzer : Discover your online presence")), titleWidth = 230,
                   disable = FALSE),
   
-#### @SAMUEL YOU WILL FOCUS HERE FOR CREATING THE INPUT ####
   dashboardSidebar(
     sidebarPanel(
 
@@ -114,10 +99,7 @@ ui <- dashboardPage(
                               h4(style="color:#cc4c02",HTML("6. Sentiment Polarity (AFINN) ")),
                               h5(style="color:#000000",HTML("Its is a scaling system that reflects the emotional depth of emotions in a piece of text. Sentiment score detects emotions and assigns them sentiment scores, for example, from 0 up to 10 – from the most negative to most positive sentiment. Sentiment score makes it simpler to understand how customers feel.")),
                               h5(style="color:#ffffff",HTML("Its is a scaling system that reflects the emotional depth of emotions in a piece of text. Sentiment score detects emotions and assigns them sentiment scores"))
-                              
-                              
-        
-                              
+                          
                               ),
                               
           )
@@ -128,8 +110,6 @@ ui <- dashboardPage(
 
 
   
-#### @SAMUEL YOUR FOCUS HERE FOR CREATING THE INPUT ENDS HERE ####
-
 
   dashboardBody(
     # Also add some custom CSS to make the title background area the same
@@ -148,7 +128,6 @@ ui <- dashboardPage(
           
         "))),
     
-    ## @ARINA @ JEN @THAYA You have to organise the tab nicely ,later figure out which will go which tab and so on !!
     tabsetPanel(
       tabPanel(title = "Sentiment Analysis",
                fluidRow(
@@ -164,11 +143,11 @@ ui <- dashboardPage(
                    ,withSpinner(plotOutput("wordcloud", height = "300px"))
                  ),
                  box(
-                   title = "Top 10 words"
+                   title = "Summary of Sentiments"
                    ,status = "primary"
                    ,solidHeader = TRUE 
                    ,collapsible = TRUE 
-                   ,withSpinner(plotOutput("top10", height = "300px"))
+                   ,withSpinner(plotOutput("sentimenttype", height = "300px"))
                  )),
                fluidRow(
                  box(
@@ -184,15 +163,6 @@ ui <- dashboardPage(
                    solidHeader = TRUE,
                    collapsible = TRUE,
                    withSpinner(plotOutput("NRC", height = "300px"))
-                 )),
-               fluidRow(  
-                 box(
-                   title = "Summary of Sentiments"
-                   ,width = 12
-                   ,status = "primary"
-                   ,solidHeader = TRUE 
-                   ,collapsible = TRUE
-                   ,withSpinner(plotOutput("sentimenttype", height = "450px"))
                  )),
                fluidRow(
                  box(
@@ -275,37 +245,27 @@ ui <- dashboardPage(
             width = "6 col-lg-3",
             status = "danger",
             title = "Top Hashtags",
-            withSpinner(uiOutput("top_hashtags")),
-            helpText("Times hashtag was used relative to most popular hashtag, excludes",
-                     tags$code(TOPIC$name),
-                     if (!is.null(TOPIC$full_community)) paste(
-                       "and", tags$code(TOPIC$full_community))
-            )
+            withSpinner(uiOutput("top_hashtags"))
           ),
           box(
             width = "6 col-lg-3",
             status = "warning",
             title = "Top Words",
             withSpinner(uiOutput("top_tweet_words")),
-            helpText("Times word was used relative to most popular word")
+            helpText("Times word was used")
           ),
           box(
             width = "6 col-lg-3",
             status = "success",
             title = "Top Emoji",
             withSpinner(uiOutput("top_emojis")),
-            helpText("Times emoji was used relative to most used emoji")
+            helpText("Times emoji was used")
           )
         )
         ),
       tabPanel(
         "Tweet Wall",
-        
-        
-        
-        
-        
-        
+
         
       ),
       
@@ -336,40 +296,44 @@ ui <- dashboardPage(
 
 # Define server logic 
 server <- function(input, output,session) {
+  #### --- 1.0 SET UP TWITTER ----
   
-
+  # Define Twitter keys
   consumer_key = "Hgj9nhsN2FPhruxxpwhttnBOS"
   consumer_secret = "IQXwprbhJYzBCqhEIpkJLcuPSPQaYTMWadj3BMg3nWrcnBIpwd"
   access_token = "1068608387334766593-BpB8hUTe09InPeeGrAqZF9Rk2SEomb"
   access_secret = "phFEUzi8xfvjaS7XKi5i8VNjXzoDUh326mcJ6SczheBH6"
   
+  # Set up Twiter Authentication 
   setup_twitter_oauth(consumer_key,consumer_secret,access_token,access_secret)
   
   
-  #### @SAMUEL YOU WILL HAVE TO MANIPULATE HERE SINCE THE INPUT YOU CREATED ABOVE HAVE TO BE REFLECTED HERE IN THE SEARCH TERM ####
- 
+  
+  #### --- 2.0 DEFINE REACTIVE FUNCTIONS TO GET DATA ----
+  ## Reactive function get raw tweets 
    tweets_r <- reactive({
     
     rt = search_tweets(
-      input$caption,                ##search query
-      n = input$Tweets_to_Download,             ##Number of results
-      include_rts = FALSE,   ## Dont include retweets if want unique tweets
-    ##  geocode = "3.14032,101.69466,93.5mi"
-    geocode = lookup_coords(input$state)
-    
+      input$caption,                #search query
+      n = input$Tweets_to_Download, #Number of results
+      include_rts = TRUE,           #Dont include retweets if want unique tweets
+    #  geocode = "3.14032,101.69466,93.5mi"
+     geocode = lookup_coords(input$state)
     )    
     saveRDS(rt, "Data/raw.rds")
     tweeets = readRDS("Data/raw.rds")
     return(tweeets)
     
   })
+   
+   ## Reactive function get formatted tweets for sentiment analysis
    dataformatted_r <- reactive({
     
     rt = search_tweets(
-      input$caption,                ##search query
-      n = input$Tweets_to_Download,  ##Number of results
-      include_rts = FALSE,   ## Dont include retweets if want unique tweets
-     ## geocode = "3.14032,101.69466,93.5mi",
+      input$caption,                  #search query
+      n = input$Tweets_to_Download,   #Number of results
+      include_rts = TRUE,            #Dont include retweets if want unique tweets
+     # geocode = "3.14032,101.69466,93.5mi",
       geocode = lookup_coords(input$state)
     )    
     saveRDS(rt, "Data/raw.rds")
@@ -386,21 +350,19 @@ server <- function(input, output,session) {
     
     tweets_tokenized %>% count(word,sort=TRUE) # Counting frequency of words
     
-    # 3.0 SENTIMENT ANALYSIS ----
+    ##2.1 SENTIMENT ANALYSIS 
     
-    ##  3.1 Sentiment Dictionaries
+    #Sentiment Dictionaries
     get_sentiments(lexicon = "bing")  # Categorical Positive & Negative
     get_sentiments(lexicon = "afinn") # Assigns polarity
     
-    ##  3.2 Joining Sentiment Dict with Tokenized Text
+    # Joining Sentiment Dict with Tokenized Text
     sentiment_bing <- tweets_tokenized %>% inner_join(get_sentiments("bing"))
     
-    ##  3.3 Measuring Sentiment
-    
-    ### Overall Sentiment
+    # Overall Sentiment
     sentiment_bing %>% count(sentiment)
     
-    ### Sentiment by user
+    # Sentiment by user
     sentiment_by_row_id <- sentiment_bing %>%
       select(-word) %>% 
       count(rowid, sentiment) %>% 
@@ -410,20 +372,23 @@ server <- function(input, output,session) {
         tweeets %>% select(screen_name, text) %>% rowid_to_column()
       )
     
-    
+    # XXXXXXXXXXX
     data_formattedd <- sentiment_by_row_id %>%
       mutate(text_formatted= str_glue("Row ID: {rowid}
                                          Screen Name: (screen_name)
                                          Text:
                                          {label_wrap(text)}"))
-    
-    
-    
     return(data_formattedd)
   })
   
   
-  #Build value box
+   
+   
+   
+   
+      ###### === TAB 1 : SENTIMENT ANALAYSIS === ######
+  #### --- 3.0 BUILDING VALUE BOXES ---  #####
+  ## Value 1 holds Number of Positive Tweets
   output$value1 <- renderValueBox({
     n <- tweets_r() %>% 
       mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
@@ -445,6 +410,8 @@ server <- function(input, output,session) {
     valueBox(paste(n, "%"), subtitle = "Positive Tweets", 
              icon = icon("smile", lib ="font-awesome" ), color = "aqua")
   })
+   
+   ## Value 2 holds Number of Negative Tweets
   output$value2 <- renderValueBox({
     n <-tweets_r()[,1:16] %>% 
       mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
@@ -464,6 +431,8 @@ server <- function(input, output,session) {
     valueBox(paste(n, "%"), subtitle = "Negative Tweets", 
              icon = icon("angry", lib ="font-awesome" ), color = "green")
   })
+  
+  ## Value 3  holds Total Tweets obtained
   output$value3 <- renderValueBox({
     tweets_count <- tweets_r() %>% 
       nrow()
@@ -471,14 +440,10 @@ server <- function(input, output,session) {
   })
   
   
-  output$Guide<- renderText({"
   
-  This chapter has introduced you to the major input and output functions that make up the front end of a Shiny app. This was a big info dump, so don’t expect to remember everything after a single read. Instead, come back to this chapter when you’re looking for a specific component: you can quickly scan the figures, and then find the code you need.
-
-In the next chapter, we’ll move on to the back end of a Shiny app: the R code that makes your user interface come to life." })
-  
-  #### @THAYA - BACKEND FOR WORDCLOUD ####
-    output$wordcloud <- renderPlot({
+  #### --- 4.0 BUILDING SENTIMENT ANALYSIS CHARTS/GRAPHS  --- ####
+  ## 4.1 WORDCLOUD ####
+  output$wordcloud <- renderPlot({
     
     tweets_cLOUD <- tweets_r()
 
@@ -511,12 +476,75 @@ In the next chapter, we’ll move on to the back end of a Shiny app: the R code 
       scale_size_area(max_size=16)+
       labs(tittle ="Sentiment Word Frequency")
   })
+
+
+  ## 4.2 SUMMARY OF SENTIMENT TYPE ####
+    output$sentimenttype <- renderPlot ({
+    n_positive <- length(which(tweettable_r()$Sentiment == "Positive")) 
+    n_neutral <- length(which(tweettable_r()$Sentiment == "Neutral"))
+    n_negative <- length(which(tweettable_r()$Sentiment == "Negative")) 
+    Count <- c(n_positive, n_neutral, n_negative)
+    Sentiment <- c("Positive","Neutral","Negative")
+    result <- data.frame(Sentiment, Count)
+    result$Sentiment <- factor(result$Sentiment, levels = Sentiment)
+    ggplot(result, aes(x=Sentiment,y=Count))+
+      geom_bar(stat = "identity", aes(fill = Sentiment))+
+      scale_fill_manual("Sentiment", values = c("Positive" = "#06d6a0", "Neutral" = "#64b5f6", "Negative" = "#f38375"))
+    
+  })
+  
+  ## 4.3 Top Positive and Negative Word ####
+    output$bing <- renderPlot({
+    pos_vs_neg <- tweets_r()[,1:16] %>% 
+      mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
+      mutate(text = tolower(text)) %>% 
+      mutate(text = gsub("fidelity", " ", text)) %>% 
+      unnest_tokens(word, text) %>% 
+      anti_join(stop_words) %>% 
+      inner_join(get_sentiments("bing")) %>% 
+      group_by(word, sentiment) %>% 
+      count(word, sentiment, sort = T) %>% 
+      ungroup() %>% 
+      group_by(sentiment) %>% 
+      top_n(10)
+    
+    ggplot(pos_vs_neg, aes(reorder(word, n), n, fill = word)) +
+      geom_col(show.legend = F) +
+      facet_wrap(~sentiment, scales = "free_y") +
+      coord_flip() + 
+      labs(y = "Count", x = "Words") +
+      theme_bw()
+    
+    
+  })
+  
+
+  ## 4.4 TYPES OF SENTIMENT FOUND ####
+    output$NRC <- renderPlot({
+    
+    nr <- read.csv("nrc.csv")  
+    #nrc tweet analysis
+    nrc <- tweets_r() %>% 
+      mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
+      mutate(text = tolower(text)) %>% 
+      unnest_tokens(word, text) %>% 
+      anti_join(stop_words) %>% 
+      inner_join(nr) %>% 
+      group_by(sentiment) %>% 
+      count(sentiment, sort = T)
+    
+    ggplot(nrc, aes(reorder(sentiment, n), n, fill = sentiment)) + 
+      geom_bar(stat = "identity", show.legend = F) + coord_flip() +
+      theme_minimal() + labs(x = "Sentiments", y = "n") +
+      theme(axis.title.x = element_text(face ="bold", size = 15),
+            axis.title.y = element_text(face = "bold", size = 15),
+            axis.text = element_text(face = "bold"))
+  })
   
   
   
-  
-  #### @THAYA - BACKEND FOR SENTIMENT POLARITY ####
-  output$polarity <- renderPlotly({
+  ## 4.5 SENTIMENT POLARITY ####
+      output$polarity <- renderPlotly({
     
     g <- dataformatted_r() %>%
       ggplot(aes(rowid, sentiment))+
@@ -541,44 +569,42 @@ In the next chapter, we’ll move on to the back end of a Shiny app: the R code 
   
   
   
-  #### @JEN - BACKEND FOR Number of tweets per ####
   
-
-  output$No_of_tweets_hour <- renderPlot({
-    tweeets <- tweets_r()
     
-  ts_plot(tweeets, by = "hours",xtime ="%F %H:%S") +
-    labs(x = NULL, y = NULL,
-         title = "Number of tweets per hour",
-         caption = "Data collected from Twitter's REST API via rtweet") +
-    theme_minimal()
+    
+  
+  
+  
+      ###### === TAB 2 : OVERVIEW OF TWEETS === ######
+  ## 5.0 DISPLAYING THE RAW TWEES####
+  ## 5.1 BUILDING A MAP THAT SHOWS THE LOCATION OF TWEETS ####
+  output$geoTaggedTweets <- renderLeaflet ({
+    
+    tweetsForGeoTagging <- tweets_r()
+    
+    tweetsForGeoTagging %>% 
+      filter(is.na(place_full_name) == FALSE & place_full_name != "") %>% 
+      count(place_full_name, sort = TRUE) %>% 
+      slice(1:10)
+    
+    ##Extracting Tweet Geographic Coordinates
+    
+    tweetsForGeoTagging <- lat_lng(tweetsForGeoTagging)
+    
+    tweetsForGeoTagging.geo <- tweetsForGeoTagging %>%
+      filter(is.na(lat) == FALSE & is.na(lng) == FALSE)
+    
+    
+    #Mapping Tweets
+    tweetsForGeoTagging.geo.sf <- st_as_sf(tweetsForGeoTagging.geo, coords = c("lng", "lat"), crs = "+proj=longlat +datum=WGS84 +ellps=WGS84")
+    
+    leaflet() %>%
+      addProviderTiles("OpenStreetMap.Mapnik") %>%
+      addCircles(data = tweetsForGeoTagging.geo.sf, color = "red",radius =10)
   })
   
-  output$No_of_tweets_day <- renderPlot({
-    tweeets <- tweets_r()
-    
-  ts_plot(tweeets, by ="days") +
-    labs(x = NULL, y = NULL,
-         title = "Number of tweets per day",
-         subtitle = paste0(format(min(tweeets$created_at), "%d %B"), " to ", format(max(tweeets$created_at),"%d %B")),
-         caption = "Data collected from Twitter's REST API via rtweet") +
-    theme_minimal()
-  })
-  
-  output$No_of_tweets_week <- renderPlot({
-    tweeets <- tweets_r()
-    
-  ts_plot(tweeets, by ="weeks") +
-    labs(x = NULL, y = NULL,
-         title = "Number of tweets per week",
-         subtitle = paste0(format(min(tweeets$created_at), "%d %B"), " to ", format(max(tweeets$created_at),"%d %B")),
-         caption = "Data collected from Twitter's REST API via rtweet") +
-    theme_minimal()
-  })
-  
-  #### @JEN - BACKEND FOR Generate Report for the day/week ####
-  
-  #### @ARINA - BACKEND FOR Table of Tweets ####
+  ## 5.2 Number of tweets per HOUR ####
+  # Reactive function get modify the raw tweets for table display
   tweettable_r <- reactive({
     
     rt = search_tweets(
@@ -600,22 +626,14 @@ In the next chapter, we’ll move on to the back end of a Shiny app: the R code 
       unnest_tokens(word,text)
     
     tweets_tokenized %>% count(word,sort=TRUE) # Counting frequency of words
-    
-    # 3.0 SENTIMENT ANALYSIS ----
-    
-    ##  3.1 Sentiment Dictionaries
+  
     get_sentiments(lexicon = "bing")  # Categorical Positive & Negative
     get_sentiments(lexicon = "afinn") # Assigns polarity
     
-    ##  3.2 Joining Sentiment Dict with Tokenized Text
     sentiment_bing <- tweets_tokenized %>% inner_join(get_sentiments("bing"))
-    
-    ##  3.3 Measuring Sentiment
-    
-    ### Overall Sentiment
+
     sentiment_bing %>% count(sentiment)
     
-    ### Sentiment by user
     sentiment_by_row_id <- sentiment_bing %>%
       select(-word) %>% 
       count(rowid, sentiment) %>% 
@@ -625,8 +643,8 @@ In the next chapter, we’ll move on to the back end of a Shiny app: the R code 
         tweeets %>% select(screen_name, text) %>% rowid_to_column()
       )
     
-    ## Start modification:
-    ## Table: Sentiment per tweet + retweet_count
+    # Start modification:
+    # Table: Sentiment per tweet + retweet_count
     sentiment_by_tweets <- sentiment_by_row_id %>%
       mutate(Sentiment = if_else(sentiment < 0, "Negative", 
                                  if_else(sentiment == 0, "Neutral", 
@@ -637,10 +655,10 @@ In the next chapter, we’ll move on to the back end of a Shiny app: the R code 
       select(-rowid, -positive, -negative, -sentiment)
     
     
-    ## Rename columns in sentiment_by_tweets
+    # Rename columns in sentiment_by_tweets
     colnames(sentiment_by_tweets) <- c("Username", "Tweets", "Sentiment", "Retweets")
     
-    ## Formatting table
+    # Formatting table
     sentiment_by_tweets <- sentiment_by_tweets %>%
       mutate(
         sentiment_box_color = dplyr::case_when(
@@ -678,146 +696,135 @@ In the next chapter, we’ll move on to the back end of a Shiny app: the R code 
   })
   
   
-  #### @ARINA - BACKEND FOR Sentiment Type Bar Plot  ####
   
-  output$sentimenttype <- renderPlot ({
-    n_positive <- length(which(tweettable_r()$Sentiment == "Positive")) 
-    n_neutral <- length(which(tweettable_r()$Sentiment == "Neutral"))
-    n_negative <- length(which(tweettable_r()$Sentiment == "Negative")) 
-    Count <- c(n_positive, n_neutral, n_negative)
-    Sentiment <- c("Positive","Neutral","Negative")
-    result <- data.frame(Sentiment, Count)
-    result$Sentiment <- factor(result$Sentiment, levels = Sentiment)
-    ggplot(result, aes(x=Sentiment,y=Count))+
-      geom_bar(stat = "identity", aes(fill = Sentiment))+
-      scale_fill_manual("Sentiment", values = c("Positive" = "#06d6a0", "Neutral" = "#64b5f6", "Negative" = "#f38375"))
+  
+  
+      ###### === TAB 3 : NUMBER  OF TWEETS === ######
+  #### --- 6.0 Time series Graphs  --- ####
+  ## 6.1 Number of tweets per HOUR ####
+  
+  output$No_of_tweets_hour <- renderPlot({
+    tweeets <- tweets_r()
     
+    ts_plot(tweeets, by = "hours",xtime ="%F %H:%S") +
+      labs(x = NULL, y = NULL,
+           title = "Number of tweets per hour",
+           caption = "Data collected from Twitter's REST API via rtweet") +
+      theme_minimal()
   })
-
+  
+  ## 6.2 Number of tweets per DAY ####
+  
+  output$No_of_tweets_day <- renderPlot({
+    tweeets <- tweets_r()
+    
+    ts_plot(tweeets, by ="days") +
+      labs(x = NULL, y = NULL,
+           title = "Number of tweets per day",
+           subtitle = paste0(format(min(tweeets$created_at), "%d %B"), " to ", format(max(tweeets$created_at),"%d %B")),
+           caption = "Data collected from Twitter's REST API via rtweet") +
+      theme_minimal()
+  })
+  
+  ## 6.3 Number of tweets per WEEK ####
+  output$No_of_tweets_week <- renderPlot({
+    tweeets <- tweets_r()
+    
+    ts_plot(tweeets, by ="weeks") +
+      labs(x = NULL, y = NULL,
+           title = "Number of tweets per week",
+           subtitle = paste0(format(min(tweeets$created_at), "%d %B"), " to ", format(max(tweeets$created_at),"%d %B")),
+           caption = "Data collected from Twitter's REST API via rtweet") +
+      theme_minimal()
+  })
   
   
 
-  output$geoTaggedTweets <- renderLeaflet ({
+
+  
+  
+  
+  
+  
+      ###### === TAB 4 : HIGH SCORES === ######
+  #### --- 7.0 DISPLAYING ALL HIGH SCORES OF THE TWEETS  --- ####
+  # Color Helpers 
+  BASIC_COLORS <- c("primary", "info", "success", "danger", "warning")
+  
+  ## 7.1 HIGH SCORES FOR ENGAGEMENT ####
+  output$top_tweeters <- renderUI({
+    tweets_r() %>%
+      group_by(screen_name, profile_url, profile_image_url) %>%
+      summarize(engagement = (sum(retweet_count) * 2 + sum(favorite_count)) / n()) %>%
+      arrange(desc(engagement)) %>%
+      ungroup() %>%
+      slice(1:10) %>%
+      mutate(
+        engagement = scale(engagement, center = FALSE),
+        engagement = engagement / max(engagement) * 100,
+        profile_image = map_chr(profile_image_url, cache_profile_image),
+        profile_image_url = glue::glue('<div class="center-block"><img class="img-responsive img-circle" src="{profile_image}" alt={screen_name} style="max-height: 25px; min-width: 20px;"></div>'),
+        profile_url = if_else(is.na(profile_url), glue::glue("https://twitter.com/{screen_name}"), profile_url),
+        screen_name = glue::glue('<a href="{profile_url}" target="_blank">@{screen_name}</a>'),
+        engagement = progressBar_v(engagement, rep(BASIC_COLORS[1:5], 2))
+      ) %>%
+      select(profile_image_url, screen_name, engagement) %>%
+      knitr::kable(
+        format = "html",
+        escape = FALSE,
+        align = "cll",
+        col.names = c("", "Screen Name", "Engagement/Tweet "),
+        table.attr = 'class = "table"'
+      ) %>%
+      HTML()
+  })
+  
+  ## 7.2 HIGH SCORES FOR HASHTAGS ####
+  output$top_hashtags <- renderUI({
+    twh <-
+      tweets_r() %>%
+      select(hashtags) %>%
+      unnest() %>%
+      count(hashtags, sort = TRUE) %>%
+      filter(!is.na(hashtags)) %>%
+      mutate(hashtags = paste0("#", hashtags))
     
-    tweetsForGeoTagging <- tweets_r()
+    colors <- rep(BASIC_COLORS[1:5], 2)
     
-    tweetsForGeoTagging %>% 
-      filter(is.na(place_full_name) == FALSE & place_full_name != "") %>% 
-      count(place_full_name, sort = TRUE) %>% 
+    tags$div(
+      map(seq_len(min(10, nrow(twh))), ~ {
+        progressGroup(twh$hashtags[[.]], twh$n[[.]], max = max(twh$n), color = colors[.])
+      })
+    )
+  })
+  
+  ## 7.3 HIGH SCORES FOR WORDS FREQUENCY ####
+  output$top_tweet_words <- renderUI({
+    tw <- tweets_r() %>%
+      select(text) %>%
+      mutate(
+        text = str_remove_all(text, "@[[:alnum:]_]+\\b"),
+        text = str_remove_all(text, "&\\w+;")
+      ) %>%
+      tidytext::unnest_tokens(word, text) %>%
+      filter(
+        !word %in% c("http", "https", "t.co"),
+        nchar(word) >= 3
+      ) %>%
+      anti_join(tidytext::stop_words, by = "word") %>%
+      count(word, sort = TRUE) %>%
       slice(1:10)
     
-    ##Extracting Tweet Geographic Coordinates
+    colors <- rep(BASIC_COLORS[1:5], 2)
     
-    tweetsForGeoTagging <- lat_lng(tweetsForGeoTagging)
-    
-    tweetsForGeoTagging.geo <- tweetsForGeoTagging %>%
-      filter(is.na(lat) == FALSE & is.na(lng) == FALSE)
-    
-    
-    #Mapping Tweets
-    tweetsForGeoTagging.geo.sf <- st_as_sf(tweetsForGeoTagging.geo, coords = c("lng", "lat"), crs = "+proj=longlat +datum=WGS84 +ellps=WGS84")
-    
-    leaflet() %>%
-      addProviderTiles("OpenStreetMap.Mapnik") %>%
-      addCircles(data = tweetsForGeoTagging.geo.sf, color = "red",radius =10)
+    tags$div(
+      map(seq_len(min(10, nrow(tw))), ~ {
+        progressGroup(tw$word[[.]], tw$n[[.]], max = max(tw$n), color = colors[.])
+      })
+    )
   })
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-
-  
-  
-  
-  
-  
-  
-  
-  ################################EXTRA PLOTSSSSS ####################
-  output$top10 <- renderPlot({
-    topwords <-  tweets_r()[,1:16] %>% 
-      mutate(text = tolower(text)) %>% 
-      mutate(text = gsub("rt", "", text)) %>% 
-      mutate(text = gsub("https","", text)) %>% 
-      mutate(text = gsub("t.co", "", text)) %>% 
-      mutate(text = gsub("covid", "", text)) %>% 
-      mutate(text = removeNumbers(text)) %>% 
-      mutate(text = gsub("19", "", text)) %>% 
-      mutate(text = gsub("ppl", "people", text)) %>% 
-      mutate(text = gsub("coronoavirus", "coronavirus", text)) %>% 
-      mutate(text = gsub("en", "", text)) %>% 
-      mutate(rowmumber = row_number()) %>%#mutate row numbers
-      mutate(text = str_remove(text, "rt")) %>% 
-      unnest_tokens(word, text) %>%  #unnest words
-      anti_join(stop_words) %>% #removes stop words
-      count(word, sort = T) %>%#count most occuring words
-      top_n(10) #select top 10
-    
-    ggplot(topwords, aes(reorder(word, n), n, fill = word)) + #piped into ggplot
-      geom_bar(stat = "identity", show.legend = F) + coord_flip() +
-      labs(x = "Word", y = "count") + theme_minimal() +
-      theme(axis.title.x = element_text(face ="bold", size = 15),
-            axis.title.y = element_text(face = "bold", size = 15),
-            axis.text = element_text(face = "bold"))
-  })
-  
-  output$bing <- renderPlot({
-    pos_vs_neg <- tweets_r()[,1:16] %>% 
-      mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
-      mutate(text = tolower(text)) %>% 
-      mutate(text = gsub("fidelity", " ", text)) %>% 
-      unnest_tokens(word, text) %>% 
-      anti_join(stop_words) %>% 
-      inner_join(get_sentiments("bing")) %>% 
-      group_by(word, sentiment) %>% 
-      count(word, sentiment, sort = T) %>% 
-      ungroup() %>% 
-      group_by(sentiment) %>% 
-      top_n(10)
-    
-    ggplot(pos_vs_neg, aes(reorder(word, n), n, fill = word)) +
-      geom_col(show.legend = F) +
-      facet_wrap(~sentiment, scales = "free_y") +
-      coord_flip() + 
-      labs(y = "Count", x = "Words") +
-      theme_bw()
-    
-    
-  })
-
-  output$NRC <- renderPlot({
-    
-    nr <- read.csv("nrc.csv")  
-    #nrc tweet analysis
-    nrc <- tweets_r() %>% 
-      mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
-      mutate(text = tolower(text)) %>% 
-      unnest_tokens(word, text) %>% 
-      anti_join(stop_words) %>% 
-      inner_join(nr) %>% 
-      group_by(sentiment) %>% 
-      count(sentiment, sort = T)
-    
-    ggplot(nrc, aes(reorder(sentiment, n), n, fill = sentiment)) + 
-      geom_bar(stat = "identity", show.legend = F) + coord_flip() +
-      theme_minimal() + labs(x = "Sentiments", y = "n") +
-      theme(axis.title.x = element_text(face ="bold", size = 15),
-            axis.title.y = element_text(face = "bold", size = 15),
-            axis.text = element_text(face = "bold"))
-  })
-  
-  
-  
-  ################HIGH SCOREEEEE ########################
-  
+  ## 7.4 HIGH SCORES FOR EMOJI ####
   output$top_emojis <- renderUI({
     emoji_regex <- "[\\uD83C-\\uDBFF\\uDC00-\\uDFFF\u2600-\u27ff]+"
     
@@ -847,73 +854,19 @@ In the next chapter, we’ll move on to the back end of a Shiny app: the R code 
     )
   })
   
-  output$top_hashtags <- renderUI({
-    twh <-
-      tweets_r() %>%
-      select(hashtags) %>%
-      unnest() %>%
-      count(hashtags, sort = TRUE) %>%
-      filter(!is.na(hashtags)) %>%
-      filter(!str_detect(tolower(hashtags), TOPIC$hashtag_exclude)) %>%
-      mutate(hashtags = paste0("#", hashtags))
-    
-    colors <- rep(BASIC_COLORS[1:5], 2)
-    
-    tags$div(
-      map(seq_len(min(10, nrow(twh))), ~ {
-        progressGroup(twh$hashtags[[.]], twh$n[[.]], max = max(twh$n), color = colors[.])
-      })
-    )
-  })
   
-  output$top_tweeters <- renderUI({
-    tweets_r() %>%
-      group_by(screen_name, profile_url, profile_image_url) %>%
-      summarize(engagement = (sum(retweet_count) * 2 + sum(favorite_count)) / n()) %>%
-      arrange(desc(engagement)) %>%
-      ungroup() %>%
-      slice(1:10) %>%
-      select(screen_name, engagement) %>%
-      knitr::kable(
-        format = "html",
-        escape = FALSE,
-        align = "cll",
-        col.names = c("Screen Name", "Engagement/Tweet "),
-        table.attr = 'class = "table"'
-      ) %>%
-      HTML()
-  })
   
-  output$top_tweet_words <- renderUI({
-    tw <- tweets_r() %>%
-      select(text) %>%
-      mutate(
-        text = str_remove_all(text, "@[[:alnum:]_]+\\b"),
-        text = str_remove_all(text, "&\\w+;")
-      ) %>%
-      tidytext::unnest_tokens(word, text) %>%
-      filter(
-        !word %in% c("http", "https", "t.co"),
-        !str_detect(word, TOPIC$wordlist_exclude),
-        nchar(word) >= 3
-      ) %>%
-      anti_join(tidytext::stop_words, by = "word") %>%
-      count(word, sort = TRUE) %>%
-      slice(1:10)
-    
-    colors <- rep(BASIC_COLORS[1:5], 2)
-    
-    tags$div(
-      map(seq_len(min(10, nrow(tw))), ~ {
-        progressGroup(tw$word[[.]], tw$n[[.]], max = max(tw$n), color = colors[.])
-      })
-    )
-  })
+  ###### === TAB 5 : TWEET WALL === ######
+  #### --- 8.0 DISPLAYING ALL TWEETS BASED ON TWITTER UI  --- ####
   
   
   
+  ###### === TAB 6 : DOCUMENTATION/GUIDE === ######
+  #### --- 9.0 DISPLAYING GUIDES TO USER  --- ####
   
   
+  
+  #### @JEN - BACKEND FOR Generate Report for the day/week ####
   
   
   

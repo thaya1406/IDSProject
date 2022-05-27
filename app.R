@@ -47,89 +47,194 @@ library(purrr)
 library(dplyr)
 library(shinycssloaders)
 
+#Emoji
+library("devtools")
+#devtools :: install_github("hadley/emo", force = TRUE)
 
+#Documentation
+library(knitr)
+library(markdown)
+library(rmarkdown)
+library(shinyjs)
+
+# Google Map Query
+Sys.setenv(GOOGLE_MAPS_KEY= "AIzaSyCZbE_A1CI2PlHD2KZdu15qVTU7U5wXujI")
+
+# Run.txt
+progressGroup = function(text, value, min = 0, max = value, color = "aqua") {
+  stopifnot(is.character(text))
+  stopifnot(is.numeric(value))
+  if (value < min || value > max)
+    stop(sprintf("'value' should be in the range from %d to %d.", min, max), call. = FALSE)
+  tags$div(
+    class = "progress-group",
+    tags$span(class = "progress-text", text),
+    tags$span(class = "progress-number", sprintf("%d / %d", value, max)),
+    progressBar(round(value / max * 100), color = color, size = "sm")
+  )
+}
+
+progressBar_v = function(x, colors) {
+  if (length(colors) > length(x)) {
+    colors <- rep(colors, ceiling(length(x)/length(colors)))
+  }
+  x <- purrr::map2(x, colors[seq_along(x)], ~ progressBar(.x, color = .y))
+  map_chr(x, paste)
+}
+
+progressBar = function(
+    value = 0,
+    label = FALSE,
+    color = "aqua",
+    size = NULL,
+    striped = FALSE,
+    active = FALSE,
+    vertical = FALSE
+) {
+  stopifnot(is.numeric(value))
+  if (value < 0 || value > 100)
+    stop("'value' should be in the range from 0 to 100.", call. = FALSE)
+  # if (!(color %in% shinydashboard:::validColors || color %in% shinydashboard:::validStatuses))
+  #   stop("'color' should be a valid status or color.", call. = FALSE)
+  if (!is.null(size))
+    size <- match.arg(size, c("sm", "xs", "xxs"))
+  text_value <- paste0(value, "%")
+  if (vertical)
+    style <- htmltools::css(height = text_value, `min-height` = "2em")
+  else
+    style <- htmltools::css(width = text_value, `min-width` = "2em")
+  tags$div(
+    class = "progress",
+    class = if (!is.null(size)) paste0("progress-", size),
+    class = if (vertical) "vertical",
+    class = if (active) "active",
+    tags$div(
+      class = "progress-bar",
+      class = paste0("progress-bar-", color),
+      class = if (striped) "progress-bar-striped",
+      style = style,
+      role = "progressbar",
+      `aria-valuenow` = value,
+      `aria-valuemin` = 0,
+      `aria-valuemax` = 100,
+      tags$span(class = if (!label) "sr-only", text_value)
+    )
+  )
+}
+
+#Emoji function
+twemoji = function(runes, width = "20px") {
+  runes <- tolower(runes)
+  runes <- gsub(" ", "-", runes)
+  runes <- sub("-fe0f$", "", runes) # seems to cause problems with twemoji :shrug:
+  emojis <- glue::glue("https://cdnjs.cloudflare.com/ajax/libs/twemoji/11.2.0/2/svg/{runes}.svg")
+  emojis <- glue::glue('<img src="{emojis}" width = "{width}">')
+  paste(emojis)
+}
+
+# Rmd file
+rmdfiles <- c("documentation.Rmd")
+sapply(rmdfiles, knit, quiet = T)
+
+#### --- 0.0 UI ----
 
 
 ui <- dashboardPage(
-  dashboardHeader(title = h4(HTML("BrandAnalyzer : Discover your online presence")), titleWidth = 230,
+  dashboardHeader(title = h2(HTML("Brand Analyzer"),          
+                             style = "font-weight:bold"), 
+                  titleWidth = 250,
                   disable = FALSE),
   
   dashboardSidebar(
     sidebarPanel(
-
+      id = "sidebar",
 ##This one is the number of tweets to be downloaded
-      h5(style="color:#cc4c02", sliderInput("Tweets_to_Download",
+      h5(style="color:#006d77", sliderInput("Tweets_to_Download",
                                             "No of Tweets to Download:",
                                             min = 500,
                                             max = 18000,
                                             value = 500,
                                             step = 500)),
+
 ##This one is for the user to key in the value
-        fluidPage(style="color:#cc4c02",
-          textInput("caption", "Key-in your word or Hashtags", "najib"),
-          verbatimTextOutput("value")), 
-
-        fluidPage(style="color:#cc4c02",
-          selectInput("state", "Location",
-                      list(`North America` = list("United States of America", "Canada", "Mexico", "Greenland", "Cuba"),
-                           `South America` = list("Brazil", "Argentina", "Colombia", "Peru", "Chile", "Venezuela"),
-                           `Europe` = list("United Kingdom", "Spain", "Germany", "Italy", "France", "Netherlands"),
-                           `Asia` = list("Malaysia", "Singapore", "China", "Japan", "South Korea", "Indonesia", "Afghanistan"),
-                           `Africa` = list("South Africa", "Nigeria", "Kenya", "Ghana", "Morocco"),
-                           `Oceania` = list("New Zealand", "Australia", "Fiji", "Papua New Guinea"))
-          ),
-          textOutput("result")
-        ), 
-        fluidPage(
-          tags$div( id = 'ci_intel_by_hs_hstable' ,
-                    fluidRow( h3( style="color:#cc4c02",HTML("<b>Guide on how to use !</b>")),
-                              h5(style="color:#000000",HTML("1. Use the slider to determine the number of tweets to download ")),
-                              h5(style="color:#000000",HTML("2. Key in your brand's associated keywords or hashtags[include'#'] to perform a search which will scrape all the tweets posted by the user")),
-                              h5(style="color:#000000",HTML("3. Select a location from the dropdown to refine and filter your search by location")),
-                              h3( style="color:#cc4c02",HTML("<b>Guide on Understanding the results!</b>")),
-                              h4(style="color:#cc4c02",HTML("1. Wordcloud ")),
-                              h5(style="color:#000000",HTML("A Word Cloud is a collection or cluster of words depicted in different sizes.The bigger and bolder the word appears, the more often it is appeared on the tweets.")),
-                              h4(style="color:#cc4c02",HTML("2. Top 10 Words ")),
-                              h5(style="color:#000000",HTML("Top 10 words is where you will see the words that has highest frequency which can be used to integrate in your copywriting. ")),
-                              h4(style="color:#cc4c02",HTML("3. Top Positive & Negative Words ")),
-                              h5(style="color:#000000",HTML("This plot shows the frequency of the positive and negative words used by the public towards your brand.")),
-                              h4(style="color:#cc4c02",HTML("4. Types of Sentiments Found (NRC)")),
-                              h5(style="color:#000000",HTML("The NRC Emotion Lexicon is a list of English words and their associations with eight basic emotions (anger, fear, anticipation, trust, surprise, sadness, joy, and disgust) and two sentiments (negative and positive). The annotations were manually done by crowdsourcing. ")),
-                              h4(style="color:#cc4c02",HTML("5. Summary of Sentiments (bing)")),
-                              h5(style="color:#000000",HTML("Here you will see summary of positive,neutral and negative words classified. With the use if bing lexicon it categorizes words in a binary fashion into positive and negative categories. The AFINN lexicon assigns words with a score that runs between -5 and 5, with negative scores indicating negative sentiment and positive scores indicating positive sentiment.")),
-                              h4(style="color:#cc4c02",HTML("6. Sentiment Polarity (AFINN) ")),
-                              h5(style="color:#000000",HTML("Its is a scaling system that reflects the emotional depth of emotions in a piece of text. Sentiment score detects emotions and assigns them sentiment scores, for example, from 0 up to 10 – from the most negative to most positive sentiment. Sentiment score makes it simpler to understand how customers feel.")),
-                              h5(style="color:#ffffff",HTML("Its is a scaling system that reflects the emotional depth of emotions in a piece of text. Sentiment score detects emotions and assigns them sentiment scores"))
-                          
-                              ),
-                              
-          )
-
-        ),
-        width = 0.3)
+      fluidPage(style="color:#006d77",
+                textInput("caption", "Key-in your word or Hashtags", "najib"),
+                verbatimTextOutput("value")), 
+      
+      fluidPage(style="color:#006d77",
+                selectInput("state", "Location",
+                            list(`North America` = list("United States of America", "Canada", "Mexico", "Greenland", "Cuba"),
+                                 `South America` = list("Brazil", "Argentina", "Colombia", "Peru", "Chile", "Venezuela"),
+                                 `Europe` = list("United Kingdom", "Spain", "Germany", "Italy", "France", "Netherlands"),
+                                 `Asia` = list("Malaysia", "Singapore", "China", "Japan", "South Korea", "Indonesia", "Afghanistan"),
+                                 `Africa` = list("South Africa", "Nigeria", "Kenya", "Ghana", "Morocco"),
+                                 `Oceania` = list("New Zealand", "Australia", "Fiji", "Papua New Guinea"))
+                ),
+                textOutput("result")
+      ),
+      width = 250)
   ), 
 
 
   
 
   dashboardBody(
+    useShinyjs(),
     # Also add some custom CSS to make the title background area the same
     # color as the rest of the header.
     tags$head(tags$style(HTML("
+
         .skin-blue .main-header .logo {
-          background-color: #3c8dbc;
+          background-color: #c9e4de;
+          color:#006d77;
         }
+        
         .skin-blue .main-header .logo:hover {
-          background-color: #3c8dbc;
+          background-color: #c9e4de;
         }
+        
+        .skin-blue .main-header .navbar {
+          background-color: #c9e4de;
+        }
+        
+        /* toggle button when hovered  */
+        .skin-blue .main-header .navbar .sidebar-toggle:hover{
+        background-color: #0081a7;
+        }
+        
         .main-sidebar {
-            background-color: skinblue !important;
-          }
-  
+            background-color: #c9e4de !important;
+        }
+        
+        #sidebar{
+            background-color: #c9e4de;
+        }
+        
+        #tabset{
+          color: #0081a7;
+        }
+        
+        .tabbable > .nav > li > a {
+          color:#0081a7;
+        }
           
+        .content-wrapper, .right-side {
+          background-color: #c9e4de;
+        }
+        
+        .box.box-solid.box-primary>.box-header {
+          background-color: #006d77;
+        }
+
+        .box.box-solid.box-primary{
+          background:#edf6f9
+        }
+  
+        
         "))),
     
     tabsetPanel(
+      id = "tabset",
       tabPanel(title = "Sentiment Analysis",
                fluidRow(
                  valueBoxOutput("value1"),
@@ -168,6 +273,7 @@ ui <- dashboardPage(
                fluidRow(
                  box(
                    title = "Sentiment Polarity",
+                   status = "primary",
                    width = 12,
                    solidHeader = TRUE,
                    collapsible = TRUE,
@@ -239,8 +345,7 @@ ui <- dashboardPage(
             tags$div(
               class = "scroll-overflow-x",
               withSpinner(uiOutput("top_tweeters"))
-            ),
-            helpText("Weighted average of RT (2x) and favorites (1x) per tweet")
+            )
           ),
           box(
             width = "6 col-lg-3",
@@ -252,15 +357,13 @@ ui <- dashboardPage(
             width = "6 col-lg-3",
             status = "warning",
             title = "Top Words",
-            withSpinner(uiOutput("top_tweet_words")),
-            helpText("Times word was used")
+            withSpinner(uiOutput("top_tweet_words"))
           ),
           box(
             width = "6 col-lg-3",
             status = "success",
             title = "Top Emoji",
-            withSpinner(uiOutput("top_emojis")),
-            helpText("Times emoji was used")
+            withSpinner(uiOutput("top_emojis"))
           )
         )
         ),
@@ -270,26 +373,16 @@ ui <- dashboardPage(
         
       ),
       
-      
-      
       tabPanel(title = "About App",
-               tags$div( id = 'ci_intel_by_hs_hstable' ,
-                         fluidRow( h3( style="color:#cc4c02",HTML("<b>BrandAnalyzer : Discover your online presence !</b>")),
-                                   h5(HTML("Using Twittter API, this Dashboard collects recent tweets.
-                                          The Number of Tweets and preferred hashtag can be used to retrieve tweets with a range between
-                                          500 & 18000 tweets at a time. There are also a range of preferred hashtags that can be used to
-                                          guide the search. The tweet table presented using reactable, contains options to search either 
-                                                a specific column or the entire table. </br>
-                                             
-                                                An interactive plot, that presents the guiding statement, tweet author and link to the page of twitter itself.
-                                                ")))
-               )#tagsDiv
-               
-               )#tabPanel
+               fluidPage(
+                 style="padding-top: 40px;",
+                 downloadButton("download", "Download documentation"),
+                 withMathJax(includeMarkdown("documentation.md"))
+               )
+      )#tabPanel
     )#tabsetPanel
-    )#dashboardBody
+  ),#dashboardBody
 )#dashboardPage
-
 
 
 
@@ -298,6 +391,19 @@ ui <- dashboardPage(
 # Define server logic 
 server <- function(input, output,session) {
   #### --- 1.0 SET UP TWITTER ----
+  
+  # Hide sidebar when input$tabset == "About App"
+  { observe({
+    if (input$tabset == "About App") {
+      hide(selector = "body > div.wrapper > header > nav > div:nth-child(4) > ul")
+      addClass(selector = "body", class = "sidebar-collapse")
+      removeClass(selector = "body", class = "control-sidebar-open") 
+    }
+    else {
+      show(selector = "body > div.wrapper > header > nav > div:nth-child(4) > ul")
+      removeClass(selector = "body", class = "sidebar-collapse")
+    }
+  })}
   
   # Define Twitter keys
   consumer_key = "Hgj9nhsN2FPhruxxpwhttnBOS"
@@ -409,7 +515,7 @@ server <- function(input, output,session) {
     
     
     valueBox(paste(n, "%"), subtitle = "Positive Tweets", 
-             icon = icon("smile", lib ="font-awesome" ), color = "aqua")
+             icon = icon("smile", lib ="font-awesome" ), color = "purple")
   })
    
    ## Value 2 holds Number of Negative Tweets
@@ -430,14 +536,14 @@ server <- function(input, output,session) {
     
     n <- n[,2]
     valueBox(paste(n, "%"), subtitle = "Negative Tweets", 
-             icon = icon("angry", lib ="font-awesome" ), color = "green")
+             icon = icon("angry", lib ="font-awesome" ), color = "maroon")
   })
   
   ## Value 3  holds Total Tweets obtained
   output$value3 <- renderValueBox({
     tweets_count <- tweets_r() %>% 
       nrow()
-    valueBox(tweets_count, subtitle = "Total Tweets", icon = icon("chart-bar", lib ="font-awesome" ), color = "orange")
+    valueBox(tweets_count, subtitle = "Total Tweets", icon = icon("chart-bar", lib ="font-awesome" ), color = "yellow")
   })
   
   
@@ -473,7 +579,7 @@ server <- function(input, output,session) {
       geom_text_wordcloud_area()+
       facet_wrap(~ sentiment, ncol=2)+
       theme_tq()+
-      scale_color_tq()+
+      scale_color_tq(theme = "dark")+
       scale_size_area(max_size=16)+
       labs(tittle ="Sentiment Word Frequency")
   })
@@ -514,9 +620,7 @@ server <- function(input, output,session) {
       facet_wrap(~sentiment, scales = "free_y") +
       coord_flip() + 
       labs(y = "Count", x = "Words") +
-      theme_bw()
-    
-    
+      theme_gray()
   })
   
 
@@ -536,9 +640,9 @@ server <- function(input, output,session) {
     
     ggplot(nrc, aes(reorder(sentiment, n), n, fill = sentiment)) + 
       geom_bar(stat = "identity", show.legend = F) + coord_flip() +
-      theme_minimal() + labs(x = "Sentiments", y = "n") +
-      theme(axis.title.x = element_text(face ="bold", size = 15),
-            axis.title.y = element_text(face = "bold", size = 15),
+      theme_minimal() + labs(x = "Sentiments", y = "Count") +
+      theme(axis.title.x = element_text(size = 15),
+            axis.title.y = element_text(size = 15),
             axis.text = element_text(face = "bold"))
   })
   
@@ -556,7 +660,7 @@ server <- function(input, output,session) {
       geom_hline(aes(yintercept=median(sentiment)+ 1.96*IQR(sentiment)), color="red")+
       geom_hline(aes(yintercept=median(sentiment)-1.96*IQR(sentiment)), color="red") +
       theme_tq()+
-      labs(title="Sentiment Polarity", x ="Twitter User", y="Sentiment")
+      labs(x ="Twitter User", y="Sentiment")
     
     
     ggplotly(g, tooltip="text") %>%
@@ -578,7 +682,6 @@ server <- function(input, output,session) {
   
       ###### === TAB 2 : OVERVIEW OF TWEETS === ######
   ## 5.0 DISPLAYING THE RAW TWEES####
-  ## 5.1 BUILDING A MAP THAT SHOWS THE LOCATION OF TWEETS ####
   output$geoTaggedTweets <- renderLeaflet ({
     
     tweetsForGeoTagging <- tweets_r()
@@ -604,7 +707,7 @@ server <- function(input, output,session) {
       addCircles(data = tweetsForGeoTagging.geo.sf, color = "red",radius =10)
   })
   
-  ## 5.2 Number of tweets per HOUR ####
+  ## 5.1 BUILDING A MAP THAT SHOWS THE LOCATION OF TWEETS ####
   # Reactive function get modify the raw tweets for table display
   tweettable_r <- reactive({
     
@@ -708,10 +811,9 @@ server <- function(input, output,session) {
     tweeets <- tweets_r()
     
     ts_plot(tweeets, by = "hours",xtime ="%F %H:%S") +
-      labs(x = NULL, y = NULL,
-           title = "Number of tweets per hour",
+      labs(x = "Date", y = "Count",
            caption = "Data collected from Twitter's REST API via rtweet") +
-      theme_minimal()
+      theme_gray()
   })
   
   ## 6.2 Number of tweets per DAY ####
@@ -720,11 +822,10 @@ server <- function(input, output,session) {
     tweeets <- tweets_r()
     
     ts_plot(tweeets, by ="days") +
-      labs(x = NULL, y = NULL,
-           title = "Number of tweets per day",
+      labs(x = "Date", y = "Count",
            subtitle = paste0(format(min(tweeets$created_at), "%d %B"), " to ", format(max(tweeets$created_at),"%d %B")),
            caption = "Data collected from Twitter's REST API via rtweet") +
-      theme_minimal()
+      theme_gray()
   })
   
   ## 6.3 Number of tweets per WEEK ####
@@ -732,16 +833,12 @@ server <- function(input, output,session) {
     tweeets <- tweets_r()
     
     ts_plot(tweeets, by ="weeks") +
-      labs(x = NULL, y = NULL,
-           title = "Number of tweets per week",
+      labs(x = "Date", y = "Count",
            subtitle = paste0(format(min(tweeets$created_at), "%d %B"), " to ", format(max(tweeets$created_at),"%d %B")),
            caption = "Data collected from Twitter's REST API via rtweet") +
-      theme_minimal()
+      theme_gray()
   })
   
-  
-
-
   
   
   
@@ -865,15 +962,24 @@ server <- function(input, output,session) {
   ###### === TAB 6 : DOCUMENTATION/GUIDE === ######
   #### --- 9.0 DISPLAYING GUIDES TO USER  --- ####
   
-  
+  output$download <- downloadHandler(
+    filename = "Documentation.pdf",
+    
+    content = function(file) {
+      
+      # temporarily switch to the temp dir, in case you do not have write
+      # permission to the current working directory
+      # owd <- setwd(tempdir())
+      # on.exit(setwd(owd))
+      file.copy("documentation.pdf", file) 
+    }
+  )
   
   #### @JEN - BACKEND FOR Generate Report for the day/week ####
   
   
   
 }
-
-
 
 
 # Run the application 

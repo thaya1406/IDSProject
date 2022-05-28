@@ -369,8 +369,58 @@ ui <- dashboardPage(
         ),
       tabPanel(
         "Tweet Wall",
-
-        
+        class = "text-center",
+        tags$h1("Tweets about", TOPIC$name),
+        # Tweet Wall - twitter.js and masonry.css - start --------------------
+        # twitter.js has to be loaded after the page is loaded (divs exist and jquery is loaded)
+        tags$head(HTML(
+          '
+        <script>
+        document.addEventListener("DOMContentLoaded", function(event) {
+          var script = document.createElement("script");
+          script.type = "text/javascript";
+          script.src  = "twitter.js";
+          document.getElementsByTagName("head")[0].appendChild(script);
+        });
+        </script>
+        ')),
+        tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "masonry.css")),
+        # Tweet Wall - twitter.js and masonry.css - end ----------------------
+        fluidRow(
+          column(
+            # Tweet Wall - Controls - start -------------------------------------------
+            12,
+            class = "col-md-8 col-md-offset-2 col-lg-6 col-lg-offset-3",
+            tags$form(
+              class = "form-inline",
+              tags$div(
+                class = "form-group",
+                tags$div(
+                  class = "btn-toolbar btn-group-sm",
+                  dateRangeInput("tweet_wall_daterange", "",
+                                 start = today(tz_global()), end = today(tz_global()),
+                                 min = "2019-01-01", max = today(tz_global()),
+                                 weekstart = 1, separator = " to "),
+                  shinyThings::dropdownButtonUI("tweet_wall_date_presets",
+                                                TWEET_WALL_DATE_INPUTS,
+                                                class = "btn-default")
+                )
+              )
+            )
+            # Tweet Wall - Controls - end ---------------------------------------------
+          ),
+          shinyThings::paginationUI("tweet_wall_pager", width = 12, offset = 0)
+        ),
+        withSpinner(uiOutput("tweet_wall_tweets"), type = 3),
+        shinyThings::pagerUI("tweet_wall_pager", centered = TRUE),
+        tabItem(
+          "tab_pic_tweets",
+          class = "text-center",
+          tags$h1(HTML("Tweets with", twemoji("1F5BC", width = "42px"))),
+          shinyThings::paginationUI("pic_tweets", width = 12, offset = 0),
+          withSpinner(uiOutput("pic_tweets_wall"), type = 3),
+          shinyThings::pagerUI("pic_tweets", centered = TRUE)
+        )
       ),
       
       tabPanel(title = "About App",
@@ -383,10 +433,6 @@ ui <- dashboardPage(
     )#tabsetPanel
   ),#dashboardBody
 )#dashboardPage
-
-
-
-
 
 # Define server logic 
 server <- function(input, output,session) {
@@ -839,11 +885,6 @@ server <- function(input, output,session) {
       theme_gray()
   })
   
-  
-  
-  
-  
-  
       ###### === TAB 4 : HIGH SCORES === ######
   #### --- 7.0 DISPLAYING ALL HIGH SCORES OF THE TWEETS  --- ####
   # Color Helpers 
@@ -956,8 +997,97 @@ server <- function(input, output,session) {
   
   ###### === TAB 5 : TWEET WALL === ######
   #### --- 8.0 DISPLAYING ALL TWEETS BASED ON TWITTER UI  --- ####
+
+  ## GLOBAL REACTIVES NEEDED FOR TWEET WALL ##
+  tweets_all <- reactiveFileReader(1 * 60 * 1000, session, "data/tweets.rds", function(file) { 
+    x <- readRDS(file)
+    x
+  })
   
+  tweets <- reactive({
+    req(tweets_all())
+    tweets_all()
+  })
   
+  tweets_hourly_topic_count <- reactive({
+    req(tweets())
+    tweets() 
+  })
+  
+  tweets_simple <- reactive({
+    req(tweets())
+    tweets() 
+  })
+  
+  tweets_simple_today <- reactive({
+    req(tweets_simple())
+    tweets_simple() %>%
+      tweets_today()
+  })
+  
+  ## SERVER FOR TWEET WALL ##
+  
+  tweets_wall <- reactive({
+    tweets_simple() %>%
+      filter(
+        created_at >= input$tweet_wall_daterange[1],
+        created_at < input$tweet_wall_daterange[2] + 1
+      )
+  })
+  
+  tweet_wall_page_break = 20
+  tweet_wall_n_items <- reactive({ nrow(tweets_wall()) })
+  tweet_wall_page <- shinyThings::pager("tweet_wall_pager",
+                                        n_items = tweet_wall_n_items,
+                                        page_break = tweet_wall_page_break)
+  
+  output$tweet_wall_tweets <- renderUI({
+    s_page_items <- tweet_wall_page() %||% 1L
+    
+    validate(need(
+      nrow(tweets_wall()) > 0,
+      "No tweets in selected date range. Try another set of dates."
+    ))
+    
+    tweets_wall() %>%
+      slice(s_page_items) %>%
+      masonify_tweets()
+  })
+  
+  tweet_wall_date_preset <- shinyThings::dropdownButton("tweet_wall_date_presets",
+                                                        options = TWEET_WALL_DATE_INPUTS)
+  
+  observe({
+    req(tweet_wall_date_preset())
+    update_dates <- TWEET_WALL_DATE_RANGE(tweet_wall_date_preset())
+    if (any(is.na(update_dates))) return(NULL)
+    update_dates <- strftime(update_dates, "%F", tz = tz_global(), usetz = TRUE) %>% unname()
+    updateDateRangeInput(session, "tweet_wall_daterange", start = update_dates[1], end = update_dates[2], max = now(tz_global()))
+  })
+  
+  # Picture Tweet Wall ------------------------------------------------------
+  pic_tweets_page_break <- 20
+  tweets_pictures <- reactive({
+    tweets() %>%
+      select(created_at, status_id, screen_name, media_url) %>%
+      filter(!map_lgl(media_url, ~ length(.) > 1 || is.na(.)))
+  })
+  
+  pic_tweets_n_items <- reactive({ nrow(tweets_pictures()) })
+  pic_tweets_page <- shinyThings::pager("pic_tweets", pic_tweets_n_items, pic_tweets_page_break)
+  
+  output$pic_tweets_wall <- renderUI({
+    s_page_items <- pic_tweets_page() %||% 1L
+    
+    validate(need(
+      nrow(tweets_pictures()) > 0,
+      "No media tweets yet. Check back again soon."
+    ))
+    
+    tweets_pictures() %>%
+      slice(s_page_items) %>%
+      masonify_tweets()
+  })
   
   ###### === TAB 6 : DOCUMENTATION/GUIDE === ######
   #### --- 9.0 DISPLAYING GUIDES TO USER  --- ####

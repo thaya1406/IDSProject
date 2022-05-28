@@ -12,6 +12,8 @@ library(plotly)
 library(glue)
 library(twitteR)
 library(rvest)
+library("openssl")
+library("httpuv")
 
 ##TEXT
 library(tidytext)
@@ -135,10 +137,12 @@ twemoji = function(runes, width = "20px") {
 # Rmd file
 rmdfiles <- c("documentation.Rmd")
 sapply(rmdfiles, knit, quiet = T)
+    
+# Files needed
+source("IDSProject/functions.R") ## Make sure the working directory is the same as this file
+source("IDSProject/queen.R") ## Make sure the working directory is the same as this file
 
 #### --- 0.0 UI ----
-
-
 ui <- dashboardPage(
   dashboardHeader(title = h2(HTML("Brand Analyzer"),          
                              style = "font-weight:bold"), 
@@ -992,14 +996,12 @@ server <- function(input, output,session) {
       })
     )
   })
-  
-  
-  
+ 
   ###### === TAB 5 : TWEET WALL === ######
   #### --- 8.0 DISPLAYING ALL TWEETS BASED ON TWITTER UI  --- ####
 
   ## GLOBAL REACTIVES NEEDED FOR TWEET WALL ##
-  tweets_all <- reactiveFileReader(1 * 60 * 1000, session, "data/tweets.rds", function(file) { 
+  tweets_all <- reactiveFileReader(1 * 60 * 1000, session, "Data/tweets.rds", function(file) { 
     x <- readRDS(file)
     x
   })

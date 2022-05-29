@@ -59,6 +59,12 @@ library(markdown)
 library(rmarkdown)
 library(shinyjs)
 
+#GenerateReport
+library(wordcloud)
+library(SnowballC)
+library(syuzhet)
+library(janeaustenr)
+
 # Google Map Query
 Sys.setenv(GOOGLE_MAPS_KEY= "AIzaSyCZbE_A1CI2PlHD2KZdu15qVTU7U5wXujI")
 
@@ -371,6 +377,36 @@ ui <- dashboardPage(
           )
         )
         ),
+      tabPanel(title = "Report of the day",
+               fluidRow(
+                 valueBoxOutput("today_sentiment_value",width = 12)
+               ),
+               fluidRow(  
+                 box(
+                   title = "WordCloud of the Day"
+                   ,status = "primary"
+                   ,solidHeader = FALSE 
+                   ,collapsible = TRUE
+                   ,withSpinner(plotOutput("day_wordcloud", height = "300px"))
+                 ),
+                 box(
+                   title = "Sentiments Found Today"
+                   ,status = "warning"
+                   ,solidHeader = FALSE 
+                   ,collapsible = TRUE 
+                   ,withSpinner(plotOutput("day_sentimenttype", height = "300px"))
+                 )),
+               fluidRow(
+                 box(
+                   title = "Today's Top Positive and Negative Words"
+                   ,status = "success"
+                   ,solidHeader = FALSE
+                   ,collapsible = TRUE
+                   ,width = 12
+                   ,withSpinner(plotOutput("Top_PosNeg_Today", height = "300px"))
+                 )),
+               
+      ),
       tabPanel(
         "Tweet Wall",
         class = "text-center",
@@ -1108,7 +1144,128 @@ server <- function(input, output,session) {
   )
   
   #### @JEN - BACKEND FOR Generate Report for the day/week ####
+  report <- dataformatted_r() %>%
+    dates <- as.Date(sentiment_by_row_id$created_at) %>% #sort out dates from tweets 
+    dates_cleaned <- dates[!duplicated(dates)] %>% #remove duplicates
+    dates_sorted <- sort(dates_cleaned)%>% #sort the dates in ascending order
+    
+    sentiment_dates_only <- as.Date(sentiment_by_row_id$created_at)%>%
+    totalsentiment <- integer(length(dates_sorted))%>%
+    
+    resultString = rep.int("", length(dates_sorted)) %>%
+    day_sentiment <- 1:length(dates_sorted)%>%
+    
+    for(i in 1:length(sentiment_by_row_id$text)) # loop over tweets
+    {
+      for (j in 1:length(dates_sorted))  # loop over different dates
+      {
+        if (sentiment_dates_only[i] == dates_sorted[j]) # concatenate to resultString if dates match
+        {
+          resultString[j] = paste(resultString[j], sentiment_by_row_id$text[i])%>% #combine tweets in the same day together
+            totalsentiment[j] = totalsentiment[j] + sentiment_by_row_id$sentiment[i]%>% # calculate the total sentiment for the day
+              if (totalsentiment[j]>0){
+                day_sentiment[j] = "positive" } 
+            else if (totalsentiment[j]<0) {
+              day_sentiment[j] = "negative" }
+            else{
+              day_sentiment[j] = "neutral" }
+        } 
+      }
+    } %>%
+    
+    
+    result_by_date = data.frame(date=dates_sorted, tweetsByDate=resultString, sentimentmark=totalsentiment, sentiment= as.character(day_sentiment)) %>% #data of tweets with total sentiments for the day
+    
+    for(i in 1:length(result_by_date$date)){
+      if(dates_sorted[i] == Sys.Date())
+        output$today_sentiment_value <- renderValueBox({
+          valueBox(paste("Sentiment Report"), 
+                   subtitle = tags$p(paste("The overall sentiment for today is ", result_by_date$sentiment[i], "!"),style = "font-size: 170%;"), 
+                   width = 12, 
+                   icon = icon("users", "fa-1.5x", lib = "font-awesome" ), 
+                   color = "teal")
+        })
+    }
   
+  tweet_text <- result_by_date$tweetsByDate[result_by_date$date==Sys.Date()] %>%
+    docs <- Corpus(VectorSource(tweet_text)) %>%
+    
+    inspect(docs) %>%
+    
+    toSpace <- content_transformer(function (x , pattern ) gsub(pattern, " ", x)) %>%
+    docs <- tm_map(docs, toSpace, "/") %>%
+    docs <- tm_map(docs, toSpace, "@") %>%
+    docs <- tm_map(docs, toSpace, "\\|") %>%
+    
+    
+    # Convert the text to lower case
+    docs <- tm_map(docs, content_transformer(tolower))%>%
+    # Remove numbers
+    docs <- tm_map(docs, removeNumbers)%>%
+    # Remove english common stopwords
+    docs <- tm_map(docs, removeWords, stopwords("english"))%>%
+    docs <- tm_map(docs, removeWords, c("blabla1", "blabla2")) %>%
+    # Remove punctuations
+    docs <- tm_map(docs, removePunctuation)%>%
+    # Eliminate extra white spaces
+    docs <- tm_map(docs, stripWhitespace)%>%
+    # Text stemming
+    # docs <- tm_map(docs, stemDocument)
+    
+    dtm <- TermDocumentMatrix(docs)%>%
+    m <- as.matrix(dtm)%>%
+    v <- sort(rowSums(m),decreasing=TRUE)%>%
+    d <- data.frame(word = names(v),freq=v)%>%
+    
+    output$day_wordcloud <- renderPlot({
+      set.seed(1234)
+      wordcloud(words = d$word, freq = d$freq, min.freq = 1,
+                max.words=100, random.order=FALSE, random.color = TRUE,
+                scale=c(2,.5), colors=brewer.pal(12, "Paired"))
+      
+    })
+  
+  output$day_sentimenttype <- renderPlot({
+    # run nrc sentiment analysis to return data frame with each row classified as one of the following
+    # It also counts the number of positive and negative emotions found in each row
+    today_sentiment_text <-get_nrc_sentiment(tweet_text)%>%
+      # head(d,10) - to see top 10 lines of the get_nrc_sentiment dataframe
+      head (today_sentiment_text,10)%>%
+      
+      #transpose
+      td<-data.frame(t(today_sentiment_text))%>%
+        #Transformation and cleaning
+        names(td)[1] <- "count"%>%
+          td <- cbind("sentiment" = rownames(td), td)%>%
+            rownames(td) <- NULL%>%
+              td_new<-td[1:8,]%>%
+                #Plot One - count of words associated with each sentiment
+                quickplot(sentiment, data=td_new, weight=count, geom="bar", fill=sentiment, ylab="count")+ggtitle("Sentiments Analysis")+coord_flip()
+              
+  })
+  
+  top_words_list <- strsplit(tweet_text, split = " ")%>%
+    top_words <- as.data.frame(top_words_list)%>%
+    colnames(top_words) <- c("word")%>%
+    
+    bing_word_counts <- top_words %>%
+    inner_join(get_sentiments("bing")) %>%
+    count(word, sentiment, sort = TRUE) %>%
+    ungroup()
+  
+  
+  output$Top_PosNeg_Today <- renderPlot({
+    bing_word_counts %>%
+      group_by(sentiment) %>%
+      slice_max(n, n = 10) %>% 
+      ungroup() %>%
+      mutate(word = reorder(word, n)) %>%
+      ggplot(aes(n, word, fill = sentiment)) +
+      geom_col(show.legend = FALSE) +
+      facet_wrap(~sentiment, scales = "free_y") +
+      labs(x = "Contribution to sentiment",
+           y = NULL)
+  })
   
   
 }

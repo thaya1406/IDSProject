@@ -562,13 +562,14 @@ server <- function(input, output,session) {
       pivot_wider(names_from = sentiment, values_from = n, values_fill =list(n=0)) %>%
       mutate(sentiment= positive-negative)%>%
       left_join(
-        tweeets %>% select(screen_name, text) %>% rowid_to_column()
+        tweeets %>% select(created_at,screen_name, text) %>% rowid_to_column()
       )
     
     # XXXXXXXXXXX
     data_formattedd <- sentiment_by_row_id %>%
       mutate(text_formatted= str_glue("Row ID: {rowid}
                                          Screen Name: (screen_name)
+                                         Created at: (created_at)
                                          Text:
                                          {label_wrap(text)}"))
     return(data_formattedd)

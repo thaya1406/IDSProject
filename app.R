@@ -146,7 +146,8 @@ sapply(rmdfiles, knit, quiet = T)
     
 # Files needed
 source("IDSProject/functions.R") ## Make sure the working directory is the same as this file
-source("IDSProject/queen.R") ## Make sure the working directory is the same as this file
+source("IDSProject/settings.R") ## Make sure the working directory is the same as this files
+source("IDSProject/gathertweetcode.R") ## I need to extract the whole code of the gathertweet library he created because the function exit does not exist
 
 #### --- 0.0 UI ----
 ui <- dashboardPage(
@@ -410,7 +411,7 @@ ui <- dashboardPage(
       tabPanel(
         "Tweet Wall",
         class = "text-center",
-        tags$h1("Tweets about", TOPIC$name),
+        tags$h1("Your", TOPIC$name),
         # Tweet Wall - twitter.js and masonry.css - start --------------------
         # twitter.js has to be loaded after the page is loaded (divs exist and jquery is loaded)
         tags$head(HTML(
@@ -1037,45 +1038,52 @@ server <- function(input, output,session) {
   ###### === TAB 5 : TWEET WALL === ######
   #### --- 8.0 DISPLAYING ALL TWEETS BASED ON TWITTER UI  --- ####
 
-  ## GLOBAL REACTIVES NEEDED FOR TWEET WALL ##
-  tweets_all <- reactiveFileReader(1 * 60 * 1000, session, "Data/tweets.rds", function(file) { 
+  ### GLOBAL REACTIVES
+  tweets_all <- reactiveFileReader(1 * 60 * 1000, session, "Data/tweets.rds", function(file) {
     x <- readRDS(file)
     x
   })
   
   tweets <- reactive({
+
     req(tweets_all())
     tweets_all()
   })
   
   tweets_hourly_topic_count <- reactive({
+
     req(tweets())
     tweets() 
   })
   
   tweets_simple <- reactive({
+
     req(tweets())
     tweets() 
   })
   
   tweets_simple_today <- reactive({
+ 
     req(tweets_simple())
     tweets_simple() %>%
       tweets_today()
   })
-  
-  ## SERVER FOR TWEET WALL ##
-  
+  ##SERVER
+  ###### === TAB 5 : TWEET WALL === ######
+  #### --- 8.0 DISPLAYING ALL TWEETS BASED ON TWITTER UI  --- ####
   tweets_wall <- reactive({
+    if (input$caption != "") {
+    gathertweet_search(input$caption, "Data/tweets.rds", input$Tweets_to_Download)
     tweets_simple() %>%
       filter(
         created_at >= input$tweet_wall_daterange[1],
         created_at < input$tweet_wall_daterange[2] + 1
-      )
+      ) } 
   })
   
   tweet_wall_page_break = 20
-  tweet_wall_n_items <- reactive({ nrow(tweets_wall()) })
+  tweet_wall_n_items <- reactive({ 
+    nrow(tweets_wall()) })
   tweet_wall_page <- shinyThings::pager("tweet_wall_pager",
                                         n_items = tweet_wall_n_items,
                                         page_break = tweet_wall_page_break)

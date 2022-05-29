@@ -131,7 +131,7 @@ SCHEDULE$data <- readRDS(here::here("data/schedule.rds"))
 # git so that you don't check it into version control.
 GA_KEY <- if (file.exists("google_analytics_key.txt")) readLines("google_analytics_key.txt")
 
-TWEETS_FILE <- paste0("data/", c("tweets.rds")) %>%
+TWEETS_FILE <- paste0("Data/", c("tweets.rds")) %>%
   keep(file.exists) %>% .[1]
 message("Using tweets from: ", TWEETS_FILE)
 

@@ -30,9 +30,9 @@ left: 50%
 
 ***
 ### **Questions proposed :**
-1. AA
-2. BB
-3. CC
+1.  What is the public's opinion of a brand?
+2. Which sentiment is most frequently expressed by customers toward a brand?
+3.  What factors contribute to the customer's sentiment?
 
 ### **Possible stakeholders:**
 1. Brand Owners

@@ -24,7 +24,7 @@ left: 50%
 - Analyse your competitors by monitoring how customers talk about them
 - Look out for opportunities to improve your own business
 
-###### So what are you waiting for? Make your data-driven decisions now, all at the tip of your finger!
+###### So, what are you waiting for? Make your data-driven decisions now, all at the tip of your finger!
 
 
 

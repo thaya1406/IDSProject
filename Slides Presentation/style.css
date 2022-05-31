@@ -1,0 +1,26 @@
+
+.section .reveal h1, .section .reveal h2, .section .reveal p {
+    color: white;
+    margin-top: 50px;
+    font-weight: bold;
+}
+
+
+.reveal ol, .reveal ul {
+    display: inline-block;
+    text-align: left;
+    margin: 0 0 0 1em;
+}
+
+.reveal h6 {
+    font-size: 22pt;
+}
+
+.reveal li {
+}
+
+.exclaim .reveal li, h6{
+  margin-bottom: 0.3em;
+  font-size: 22pt;
+  font-family: "News Cycle", Impact, sans-serif;
+}

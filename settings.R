@@ -36,7 +36,7 @@ META <- list(
 #
 # See https://github.com/gadenbuie/gathertweet for a utility for tweet
 # gathering.
-library(gathertweet)
+
 TOPIC <- list(
   # Name of the conference or topic, for use in descriptive text
   name             = "BrandAnalyzer",
@@ -121,9 +121,7 @@ TWEET_WALL_DATE_RANGE <- function(inputId) {
 # then provide a named list to schedule. Use only `SCHEDULE$url` to have the
 # sidebar button link directly to the conference schedule. Or also provide
 # `SCHEDULE$data` to display an interactive dataTable of the schedule.
-SCHEDULE <- list()
-SCHEDULE$url <- "https://www.rstudio.com/conference/"
-SCHEDULE$data <- readRDS(here::here("data/schedule.rds"))
+
 
 # ---- Google Analytics Key ----
 # If you would like to use Google Analytics, save your GA key in a file called

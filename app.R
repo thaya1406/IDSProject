@@ -14,6 +14,7 @@ library(twitteR)
 library(rvest)
 library("openssl")
 library("httpuv")
+library(gathertweet)
 
 ##TEXT
 library(tidytext)
@@ -50,8 +51,7 @@ library(dplyr)
 library(shinycssloaders)
 
 #Emoji
-library("devtools")
-#devtools :: install_github("hadley/emo", force = TRUE)
+library(emo)
 
 #Documentation
 library(knitr)
@@ -59,95 +59,31 @@ library(markdown)
 library(rmarkdown)
 library(shinyjs)
 
+#TweetWall
+library(shinyThings)
+library(gathertweet)
+
+
+
 #GenerateReport
 library(wordcloud)
 library(SnowballC)
 library(syuzhet)
 library(janeaustenr)
 
-# Google Map Query
-Sys.setenv(GOOGLE_MAPS_KEY= "AIzaSyCZbE_A1CI2PlHD2KZdu15qVTU7U5wXujI")
+GA_KEY <- if (file.exists("google_analytics_key.txt")) readLines("google_analytics_key.txt")
 
-# Run.txt
-progressGroup = function(text, value, min = 0, max = value, color = "aqua") {
-  stopifnot(is.character(text))
-  stopifnot(is.numeric(value))
-  if (value < min || value > max)
-    stop(sprintf("'value' should be in the range from %d to %d.", min, max), call. = FALSE)
-  tags$div(
-    class = "progress-group",
-    tags$span(class = "progress-text", text),
-    tags$span(class = "progress-number", sprintf("%d / %d", value, max)),
-    progressBar(round(value / max * 100), color = color, size = "sm")
-  )
-}
 
-progressBar_v = function(x, colors) {
-  if (length(colors) > length(x)) {
-    colors <- rep(colors, ceiling(length(x)/length(colors)))
-  }
-  x <- purrr::map2(x, colors[seq_along(x)], ~ progressBar(.x, color = .y))
-  map_chr(x, paste)
-}
-
-progressBar = function(
-    value = 0,
-    label = FALSE,
-    color = "aqua",
-    size = NULL,
-    striped = FALSE,
-    active = FALSE,
-    vertical = FALSE
-) {
-  stopifnot(is.numeric(value))
-  if (value < 0 || value > 100)
-    stop("'value' should be in the range from 0 to 100.", call. = FALSE)
-  # if (!(color %in% shinydashboard:::validColors || color %in% shinydashboard:::validStatuses))
-  #   stop("'color' should be a valid status or color.", call. = FALSE)
-  if (!is.null(size))
-    size <- match.arg(size, c("sm", "xs", "xxs"))
-  text_value <- paste0(value, "%")
-  if (vertical)
-    style <- htmltools::css(height = text_value, `min-height` = "2em")
-  else
-    style <- htmltools::css(width = text_value, `min-width` = "2em")
-  tags$div(
-    class = "progress",
-    class = if (!is.null(size)) paste0("progress-", size),
-    class = if (vertical) "vertical",
-    class = if (active) "active",
-    tags$div(
-      class = "progress-bar",
-      class = paste0("progress-bar-", color),
-      class = if (striped) "progress-bar-striped",
-      style = style,
-      role = "progressbar",
-      `aria-valuenow` = value,
-      `aria-valuemin` = 0,
-      `aria-valuemax` = 100,
-      tags$span(class = if (!label) "sr-only", text_value)
-    )
-  )
-}
-
-#Emoji function
-twemoji = function(runes, width = "20px") {
-  runes <- tolower(runes)
-  runes <- gsub(" ", "-", runes)
-  runes <- sub("-fe0f$", "", runes) # seems to cause problems with twemoji :shrug:
-  emojis <- glue::glue("https://cdnjs.cloudflare.com/ajax/libs/twemoji/11.2.0/2/svg/{runes}.svg")
-  emojis <- glue::glue('<img src="{emojis}" width = "{width}">')
-  paste(emojis)
-}
 
 # Rmd file
 rmdfiles <- c("documentation.Rmd")
 sapply(rmdfiles, knit, quiet = T)
     
 # Files needed
-source("IDSProject/functions.R") ## Make sure the working directory is the same as this file
-source("IDSProject/settings.R") ## Make sure the working directory is the same as this files
-source("IDSProject/gathertweetcode.R") ## I need to extract the whole code of the gathertweet library he created because the function exit does not exist
+source("functions.R") ## Make sure the working directory is the same as this file
+source("settings.R") ## Make sure the working directory is the same as this files
+
+
 
 #### --- 0.0 UI ----
 ui <- dashboardPage(
@@ -194,31 +130,44 @@ ui <- dashboardPage(
     # Also add some custom CSS to make the title background area the same
     # color as the rest of the header.
     tags$head(tags$style(HTML("
-
+.body > div.wrapper > header > span {
+          padding: 19px;
+          margin-bottom: 20px;
+        }
+        
+        .main-header .logo {
+          font-weight: bold;
+          font-size: 24px;
+        }
+        
         .skin-blue .main-header .logo {
-          background-color: #c9e4de;
-          color:#006d77;
+          background-color: #006d77;
+          color:#edf6f9;
+          height: auto;
         }
         
         .skin-blue .main-header .logo:hover {
-          background-color: #c9e4de;
+          background-color: #006d77;
         }
         
         .skin-blue .main-header .navbar {
-          background-color: #c9e4de;
-        }
-        
-        /* toggle button when hovered  */
-        .skin-blue .main-header .navbar .sidebar-toggle:hover{
-        background-color: #0081a7;
+          background-color: #006d77;
         }
         
         .main-sidebar {
-            background-color: #c9e4de !important;
+            background-color: #006d77 !important;
+        }
+        #sidebar{
+            background-color: #006d77;
         }
         
-        #sidebar{
-            background-color: #c9e4de;
+        .well {
+          min-height: 20px;
+          padding: 19px;
+          margin-bottom: 20px;
+          background-color: #006d77;
+          border: 1px solid #006d77;
+          border-radius: @border-radius-base;
         }
         
         #tabset{
@@ -228,7 +177,6 @@ ui <- dashboardPage(
         .tabbable > .nav > li > a {
           color:#0081a7;
         }
-          
         .content-wrapper, .right-side {
           background-color: #c9e4de;
         }
@@ -240,9 +188,27 @@ ui <- dashboardPage(
         .box.box-solid.box-primary{
           background:#edf6f9
         }
-  
         
+        /* toggle button when hovered  */
+        .skin-blue .main-header .navbar .sidebar-toggle:hover{
+        background-color: #0081a7;
+        }
         "))),
+    
+    if (!is.null(GA_KEY)) HTML(
+      glue::glue(
+        '
+              <!-- Global site tag (gtag.js) - Google Analytics -->
+              <script async src="https://www.googletagmanager.com/gtag/js?id={GA_KEY}"></script>
+              <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){{dataLayer.push(arguments);}}
+                  gtag(\'js\', new Date());
+                  gtag(\'config\', \'{GA_KEY}\');
+               </script>
+              ')
+    ),
+    
     
     tabsetPanel(
       id = "tabset",
@@ -411,12 +377,8 @@ ui <- dashboardPage(
       tabPanel(
         "Tweet Wall",
         class = "text-center",
-        tags$h1("Your", TOPIC$name),
-        # Tweet Wall - twitter.js and masonry.css - start --------------------
-        # twitter.js has to be loaded after the page is loaded (divs exist and jquery is loaded)
         tags$head(HTML(
-          '
-        <script>
+        '<script>
         document.addEventListener("DOMContentLoaded", function(event) {
           var script = document.createElement("script");
           script.type = "text/javascript";
@@ -425,43 +387,20 @@ ui <- dashboardPage(
         });
         </script>
         ')),
-        tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "masonry.css")),
         # Tweet Wall - twitter.js and masonry.css - end ----------------------
+        tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "masonry.css")),
         fluidRow(
           column(
             # Tweet Wall - Controls - start -------------------------------------------
             12,
             class = "col-md-8 col-md-offset-2 col-lg-6 col-lg-offset-3",
-            tags$form(
-              class = "form-inline",
-              tags$div(
-                class = "form-group",
-                tags$div(
-                  class = "btn-toolbar btn-group-sm",
-                  dateRangeInput("tweet_wall_daterange", "",
-                                 start = today(tz_global()), end = today(tz_global()),
-                                 min = "2019-01-01", max = today(tz_global()),
-                                 weekstart = 1, separator = " to "),
-                  shinyThings::dropdownButtonUI("tweet_wall_date_presets",
-                                                TWEET_WALL_DATE_INPUTS,
-                                                class = "btn-default")
-                )
-              )
-            )
+    
             # Tweet Wall - Controls - end ---------------------------------------------
           ),
-          shinyThings::paginationUI("tweet_wall_pager", width = 12, offset = 0)
         ),
         withSpinner(uiOutput("tweet_wall_tweets"), type = 3),
+        shinyThings::paginationUI("tweet_wall_pager", width = 12, offset = 0),
         shinyThings::pagerUI("tweet_wall_pager", centered = TRUE),
-        tabItem(
-          "tab_pic_tweets",
-          class = "text-center",
-          tags$h1(HTML("Tweets with", twemoji("1F5BC", width = "42px"))),
-          shinyThings::paginationUI("pic_tweets", width = 12, offset = 0),
-          withSpinner(uiOutput("pic_tweets_wall"), type = 3),
-          shinyThings::pagerUI("pic_tweets", centered = TRUE)
-        )
       ),
       
       tabPanel(title = "About App",
@@ -506,29 +445,40 @@ server <- function(input, output,session) {
   #### --- 2.0 DEFINE REACTIVE FUNCTIONS TO GET DATA ----
   ## Reactive function get raw tweets 
    tweets_r <- reactive({
-    
+     
+     print("Getting Raw Tweets")
+     
     rt = search_tweets(
       input$caption,                #search query
       n = input$Tweets_to_Download, #Number of results
       include_rts = TRUE,           #Dont include retweets if want unique tweets
     #  geocode = "3.14032,101.69466,93.5mi"
-     geocode = lookup_coords(input$state)
+     geocode = lookup_coords(input$state),
+    lang = "en"
+    
     )    
     saveRDS(rt, "Data/raw.rds")
     tweeets = readRDS("Data/raw.rds")
     return(tweeets)
     
   })
+  
+  
+  
+  
    
    ## Reactive function get formatted tweets for sentiment analysis
    dataformatted_r <- reactive({
-    
+     
+     print("Getting Formatted Tweets")
+     
     rt = search_tweets(
       input$caption,                  #search query
       n = input$Tweets_to_Download,   #Number of results
       include_rts = TRUE,            #Dont include retweets if want unique tweets
      # geocode = "3.14032,101.69466,93.5mi",
-      geocode = lookup_coords(input$state)
+      geocode = lookup_coords(input$state),
+     lang = "en"
     )    
     saveRDS(rt, "Data/raw.rds")
     tweeets = readRDS("Data/raw.rds")
@@ -566,7 +516,6 @@ server <- function(input, output,session) {
         tweeets %>% select(created_at,screen_name, text) %>% rowid_to_column()
       )
     
-    # XXXXXXXXXXX
     data_formattedd <- sentiment_by_row_id %>%
       mutate(text_formatted= str_glue("Row ID: {rowid}
                                          Screen Name: (screen_name)
@@ -578,14 +527,18 @@ server <- function(input, output,session) {
   
   
    
-   
-   
-   
       ###### === TAB 1 : SENTIMENT ANALAYSIS === ######
   #### --- 3.0 BUILDING VALUE BOXES ---  #####
   ## Value 1 holds Number of Positive Tweets
   output$value1 <- renderValueBox({
-    n <- tweets_r() %>% 
+    
+    
+    rawTweets <- tweets_r()
+    
+    print("Printing value1")
+    print(  nrow(rawTweets))
+    
+    n <- rawTweets %>% 
       mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
       mutate(text = tolower(text)) %>% 
       unnest_tokens(word, text) %>% 
@@ -608,7 +561,13 @@ server <- function(input, output,session) {
    
    ## Value 2 holds Number of Negative Tweets
   output$value2 <- renderValueBox({
-    n <-tweets_r()[,1:16] %>% 
+    
+    rawTweets <- tweets_r()
+    
+    print("Printing value2")
+    print(  nrow(rawTweets))
+    
+    n <-rawTweets[,1:16] %>% 
       mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
       mutate(text = tolower(text)) %>% 
       unnest_tokens(word, text) %>% 
@@ -629,7 +588,13 @@ server <- function(input, output,session) {
   
   ## Value 3  holds Total Tweets obtained
   output$value3 <- renderValueBox({
-    tweets_count <- tweets_r() %>% 
+    
+    rawTweets <- tweets_r()
+    
+    print("Printing value3")
+    print(  nrow(rawTweets))
+    
+    tweets_count <- rawTweets %>% 
       nrow()
     valueBox(tweets_count, subtitle = "Total Tweets", icon = icon("chart-bar", lib ="font-awesome" ), color = "yellow")
   })
@@ -639,8 +604,12 @@ server <- function(input, output,session) {
   #### --- 4.0 BUILDING SENTIMENT ANALYSIS CHARTS/GRAPHS  --- ####
   ## 4.1 WORDCLOUD ####
   output$wordcloud <- renderPlot({
-    
+
     tweets_cLOUD <- tweets_r()
+    
+    print("Printing wordcloud")
+    print(  nrow(tweets_cLOUD))
+    
 
     tweets_tokenized <- tweets_cLOUD %>%
       select(text) %>%
@@ -675,9 +644,15 @@ server <- function(input, output,session) {
 
   ## 4.2 SUMMARY OF SENTIMENT TYPE ####
     output$sentimenttype <- renderPlot ({
-    n_positive <- length(which(tweettable_r()$Sentiment == "Positive")) 
-    n_neutral <- length(which(tweettable_r()$Sentiment == "Neutral"))
-    n_negative <- length(which(tweettable_r()$Sentiment == "Negative")) 
+      
+      rawTweetsForTable <- tweettable_r()
+      print("Printing sentimenttype")
+      print(  nrow(rawTweetsForTable))
+      
+      
+    n_positive <- length(which(rawTweetsForTable$Sentiment == "Positive")) 
+    n_neutral <- length(which(rawTweetsForTable$Sentiment == "Neutral"))
+    n_negative <- length(which(rawTweetsForTable$Sentiment == "Negative")) 
     Count <- c(n_positive, n_neutral, n_negative)
     Sentiment <- c("Positive","Neutral","Negative")
     result <- data.frame(Sentiment, Count)
@@ -690,7 +665,12 @@ server <- function(input, output,session) {
   
   ## 4.3 Top Positive and Negative Word ####
     output$bing <- renderPlot({
-    pos_vs_neg <- tweets_r()[,1:16] %>% 
+      rawTweets <- tweets_r()
+      print("Printing bing")
+      print(  nrow(rawTweets))
+      
+      
+    pos_vs_neg <- rawTweets[,1:16] %>% 
       mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
       mutate(text = tolower(text)) %>% 
       mutate(text = gsub("fidelity", " ", text)) %>% 
@@ -715,9 +695,16 @@ server <- function(input, output,session) {
   ## 4.4 TYPES OF SENTIMENT FOUND ####
     output$NRC <- renderPlot({
     
+      
+      
+      rawTweets <- tweets_r()
+      print("Printing NRC")
+      print(nrow(rawTweets))
+      
+      
+      
     nr <- read.csv("nrc.csv")  
-    #nrc tweet analysis
-    nrc <- tweets_r() %>% 
+    nrc <- rawTweets %>% 
       mutate(text = iconv(text, from = "latin1", to = "ASCII")) %>% 
       mutate(text = tolower(text)) %>% 
       unnest_tokens(word, text) %>% 
@@ -738,8 +725,12 @@ server <- function(input, output,session) {
   
   ## 4.5 SENTIMENT POLARITY ####
       output$polarity <- renderPlotly({
-    
-    g <- dataformatted_r() %>%
+        
+        formattedTweets <- dataformatted_r()
+        print("Printing polarity")
+        print(nrow(formattedTweets))
+        
+    g <- formattedTweets %>%
       ggplot(aes(rowid, sentiment))+
       geom_line(color="#2c3e50", alpha=0.5)+
       geom_point(aes(text=text_formatted), color="#2c3e50")+
@@ -770,9 +761,14 @@ server <- function(input, output,session) {
   
       ###### === TAB 2 : OVERVIEW OF TWEETS === ######
   ## 5.0 DISPLAYING THE RAW TWEES####
+  
+  ## 5.1 BUILDING A MAP THAT SHOWS THE LOCATION OF TWEETS ####
   output$geoTaggedTweets <- renderLeaflet ({
     
     tweetsForGeoTagging <- tweets_r()
+    
+    print("Printing Map")
+    print(nrow(tweetsForGeoTagging))
     
     tweetsForGeoTagging %>% 
       filter(is.na(place_full_name) == FALSE & place_full_name != "") %>% 
@@ -795,7 +791,9 @@ server <- function(input, output,session) {
       addCircles(data = tweetsForGeoTagging.geo.sf, color = "red",radius =10)
   })
   
-  ## 5.1 BUILDING A MAP THAT SHOWS THE LOCATION OF TWEETS ####
+  
+  ## 5.2 BUILDING A TABLES THAT SHOWS LIST OF TWEETS WITH ASSIGNED SENTIMENT ####
+  
   # Reactive function get modify the raw tweets for table display
   tweettable_r <- reactive({
     
@@ -803,7 +801,9 @@ server <- function(input, output,session) {
       input$caption,                ##search query
       n = input$Tweets_to_Download,             ##Number of results
       include_rts = FALSE,   ## Dont include retweets if want unique tweets
-      geocode = lookup_coords(input$state)
+      geocode = lookup_coords(input$state),
+      lang = "en"
+      
     )    
     saveRDS(rt, "Data/raw.rds")
     tweeets = readRDS("Data/raw.rds")
@@ -871,7 +871,12 @@ server <- function(input, output,session) {
   })
   
   output$tweettable <- renderReactable({
-    tweettable_r() %>%
+  
+    rawTweetsForTable <- tweettable_r()
+    print("Printing tweettable")
+    print(nrow(rawTweetsForTable))
+    
+    rawTweetsForTable %>%
       reactable(
         columns = list(
           sentiment_box_color = colDef(show = FALSE),
@@ -898,16 +903,24 @@ server <- function(input, output,session) {
   output$No_of_tweets_hour <- renderPlot({
     tweeets <- tweets_r()
     
+    print("Printing No_of_tweets_hour")
+    print(nrow(tweeets))
+    
+    
     ts_plot(tweeets, by = "hours",xtime ="%F %H:%S") +
       labs(x = "Date", y = "Count",
            caption = "Data collected from Twitter's REST API via rtweet") +
-      theme_gray()
+      theme_classic()
   })
   
   ## 6.2 Number of tweets per DAY ####
   
   output$No_of_tweets_day <- renderPlot({
     tweeets <- tweets_r()
+    
+    print("Printing No_of_tweets_day")
+    print(nrow(tweeets))
+    
     
     ts_plot(tweeets, by ="days") +
       labs(x = "Date", y = "Count",
@@ -919,6 +932,9 @@ server <- function(input, output,session) {
   ## 6.3 Number of tweets per WEEK ####
   output$No_of_tweets_week <- renderPlot({
     tweeets <- tweets_r()
+    
+    print("Printing No_of_tweets_week")
+    print(nrow(tweeets))
     
     ts_plot(tweeets, by ="weeks") +
       labs(x = "Date", y = "Count",
@@ -934,7 +950,14 @@ server <- function(input, output,session) {
   
   ## 7.1 HIGH SCORES FOR ENGAGEMENT ####
   output$top_tweeters <- renderUI({
-    tweets_r() %>%
+    
+    rawTweets <- tweets_r()
+    print("Printing top_tweeters")
+    print(nrow(rawTweets))
+    
+    
+    
+    rawTweets %>%
       group_by(screen_name, profile_url, profile_image_url) %>%
       summarize(engagement = (sum(retweet_count) * 2 + sum(favorite_count)) / n()) %>%
       arrange(desc(engagement)) %>%
@@ -962,8 +985,13 @@ server <- function(input, output,session) {
   
   ## 7.2 HIGH SCORES FOR HASHTAGS ####
   output$top_hashtags <- renderUI({
+    
+    rawTweets <- tweets_r()
+    print("Printing top_tweeters")
+    print(nrow(rawTweets))
+ 
     twh <-
-      tweets_r() %>%
+      rawTweets %>%
       select(hashtags) %>%
       unnest() %>%
       count(hashtags, sort = TRUE) %>%
@@ -981,7 +1009,14 @@ server <- function(input, output,session) {
   
   ## 7.3 HIGH SCORES FOR WORDS FREQUENCY ####
   output$top_tweet_words <- renderUI({
-    tw <- tweets_r() %>%
+    
+    
+    rawTweets <- tweets_r()
+    print("Printing top_tweeters")
+    print(nrow(rawTweets))
+    
+    
+    tw <- rawTweets %>%
       select(text) %>%
       mutate(
         text = str_remove_all(text, "@[[:alnum:]_]+\\b"),
@@ -1009,7 +1044,14 @@ server <- function(input, output,session) {
   output$top_emojis <- renderUI({
     emoji_regex <- "[\\uD83C-\\uDBFF\\uDC00-\\uDFFF\u2600-\u27ff]+"
     
-    twe <- tweets_r() %>%
+    rawTweets <- tweets_r()
+    print("Printing top_tweeters")
+    print(nrow(rawTweets))
+    
+    
+    
+    
+    twe <- rawTweets %>%
       select(text) %>%
       tidytext::unnest_tokens(text, text, token = "tweets") %>%
       filter(str_detect(text, emoji_regex)) %>%
@@ -1039,64 +1081,32 @@ server <- function(input, output,session) {
   #### --- 8.0 DISPLAYING ALL TWEETS BASED ON TWITTER UI  --- ####
 
   ### GLOBAL REACTIVES
-  tweets_all <- reactiveFileReader(1 * 60 * 1000, session, "Data/tweets.rds", function(file) {
-    x <- readRDS(file)
-    x
-  })
-  
-  tweets <- reactive({
+ ## tweets_wall  <-tweets_r()
 
-    req(tweets_all())
-    tweets_all()
-  })
+  tweet_wall_page_break = 10
+  tweet_wall_n_items <- reactive({ nrow(tweets_r()) })
   
-  tweets_hourly_topic_count <- reactive({
-
-    req(tweets())
-    tweets() 
-  })
-  
-  tweets_simple <- reactive({
-
-    req(tweets())
-    tweets() 
-  })
-  
-  tweets_simple_today <- reactive({
- 
-    req(tweets_simple())
-    tweets_simple() %>%
-      tweets_today()
-  })
-  ##SERVER
-  ###### === TAB 5 : TWEET WALL === ######
-  #### --- 8.0 DISPLAYING ALL TWEETS BASED ON TWITTER UI  --- ####
-  tweets_wall <- reactive({
-    if (input$caption != "") {
-    gathertweet_search(input$caption, "Data/tweets.rds", input$Tweets_to_Download)
-    tweets_simple() %>%
-      filter(
-        created_at >= input$tweet_wall_daterange[1],
-        created_at < input$tweet_wall_daterange[2] + 1
-      ) } 
-  })
-  
-  tweet_wall_page_break = 20
-  tweet_wall_n_items <- reactive({ 
-    nrow(tweets_wall()) })
   tweet_wall_page <- shinyThings::pager("tweet_wall_pager",
                                         n_items = tweet_wall_n_items,
                                         page_break = tweet_wall_page_break)
   
   output$tweet_wall_tweets <- renderUI({
+    
+    rawTweets  <- tweets_r()
+    
+    
+    print("Printing tweet_wall_tweets")
+    print(nrow(rawTweets))
+    
+    
     s_page_items <- tweet_wall_page() %||% 1L
     
     validate(need(
-      nrow(tweets_wall()) > 0,
+      nrow(rawTweets) > 0,
       "No tweets in selected date range. Try another set of dates."
     ))
     
-    tweets_wall() %>%
+    rawTweets  %>%
       slice(s_page_items) %>%
       masonify_tweets()
   })
@@ -1112,171 +1122,11 @@ server <- function(input, output,session) {
     updateDateRangeInput(session, "tweet_wall_daterange", start = update_dates[1], end = update_dates[2], max = now(tz_global()))
   })
   
-  # Picture Tweet Wall ------------------------------------------------------
-  pic_tweets_page_break <- 20
-  tweets_pictures <- reactive({
-    tweets() %>%
-      select(created_at, status_id, screen_name, media_url) %>%
-      filter(!map_lgl(media_url, ~ length(.) > 1 || is.na(.)))
-  })
   
-  pic_tweets_n_items <- reactive({ nrow(tweets_pictures()) })
-  pic_tweets_page <- shinyThings::pager("pic_tweets", pic_tweets_n_items, pic_tweets_page_break)
+
+
   
-  output$pic_tweets_wall <- renderUI({
-    s_page_items <- pic_tweets_page() %||% 1L
-    
-    validate(need(
-      nrow(tweets_pictures()) > 0,
-      "No media tweets yet. Check back again soon."
-    ))
-    
-    tweets_pictures() %>%
-      slice(s_page_items) %>%
-      masonify_tweets()
-  })
-  
-  ###### === TAB 6 : DOCUMENTATION/GUIDE === ######
-  #### --- 9.0 DISPLAYING GUIDES TO USER  --- ####
-  
-  output$download <- downloadHandler(
-    filename = "Documentation.pdf",
-    
-    content = function(file) {
-      
-      # temporarily switch to the temp dir, in case you do not have write
-      # permission to the current working directory
-      # owd <- setwd(tempdir())
-      # on.exit(setwd(owd))
-      file.copy("documentation.pdf", file) 
-    }
-  )
-  
-  #### @JEN - BACKEND FOR Generate Report for the day/week ####
-  report <- dataformatted_r() %>%
-    dates <- as.Date(sentiment_by_row_id$created_at) %>% #sort out dates from tweets 
-    dates_cleaned <- dates[!duplicated(dates)] %>% #remove duplicates
-    dates_sorted <- sort(dates_cleaned)%>% #sort the dates in ascending order
-    
-    sentiment_dates_only <- as.Date(sentiment_by_row_id$created_at)%>%
-    totalsentiment <- integer(length(dates_sorted))%>%
-    
-    resultString = rep.int("", length(dates_sorted)) %>%
-    day_sentiment <- 1:length(dates_sorted)%>%
-    
-    for(i in 1:length(sentiment_by_row_id$text)) # loop over tweets
-    {
-      for (j in 1:length(dates_sorted))  # loop over different dates
-      {
-        if (sentiment_dates_only[i] == dates_sorted[j]) # concatenate to resultString if dates match
-        {
-          resultString[j] = paste(resultString[j], sentiment_by_row_id$text[i])%>% #combine tweets in the same day together
-            totalsentiment[j] = totalsentiment[j] + sentiment_by_row_id$sentiment[i]%>% # calculate the total sentiment for the day
-              if (totalsentiment[j]>0){
-                day_sentiment[j] = "positive" } 
-            else if (totalsentiment[j]<0) {
-              day_sentiment[j] = "negative" }
-            else{
-              day_sentiment[j] = "neutral" }
-        } 
-      }
-    } %>%
-    
-    
-    result_by_date = data.frame(date=dates_sorted, tweetsByDate=resultString, sentimentmark=totalsentiment, sentiment= as.character(day_sentiment)) %>% #data of tweets with total sentiments for the day
-    
-    for(i in 1:length(result_by_date$date)){
-      if(dates_sorted[i] == Sys.Date())
-        output$today_sentiment_value <- renderValueBox({
-          valueBox(paste("Sentiment Report"), 
-                   subtitle = tags$p(paste("The overall sentiment for today is ", result_by_date$sentiment[i], "!"),style = "font-size: 170%;"), 
-                   width = 12, 
-                   icon = icon("users", "fa-1.5x", lib = "font-awesome" ), 
-                   color = "teal")
-        })
-    }
-  
-  tweet_text <- result_by_date$tweetsByDate[result_by_date$date==Sys.Date()] %>%
-    docs <- Corpus(VectorSource(tweet_text)) %>%
-    
-    inspect(docs) %>%
-    
-    toSpace <- content_transformer(function (x , pattern ) gsub(pattern, " ", x)) %>%
-    docs <- tm_map(docs, toSpace, "/") %>%
-    docs <- tm_map(docs, toSpace, "@") %>%
-    docs <- tm_map(docs, toSpace, "\\|") %>%
-    
-    
-    # Convert the text to lower case
-    docs <- tm_map(docs, content_transformer(tolower))%>%
-    # Remove numbers
-    docs <- tm_map(docs, removeNumbers)%>%
-    # Remove english common stopwords
-    docs <- tm_map(docs, removeWords, stopwords("english"))%>%
-    docs <- tm_map(docs, removeWords, c("blabla1", "blabla2")) %>%
-    # Remove punctuations
-    docs <- tm_map(docs, removePunctuation)%>%
-    # Eliminate extra white spaces
-    docs <- tm_map(docs, stripWhitespace)%>%
-    # Text stemming
-    # docs <- tm_map(docs, stemDocument)
-    
-    dtm <- TermDocumentMatrix(docs)%>%
-    m <- as.matrix(dtm)%>%
-    v <- sort(rowSums(m),decreasing=TRUE)%>%
-    d <- data.frame(word = names(v),freq=v)%>%
-    
-    output$day_wordcloud <- renderPlot({
-      set.seed(1234)
-      wordcloud(words = d$word, freq = d$freq, min.freq = 1,
-                max.words=100, random.order=FALSE, random.color = TRUE,
-                scale=c(2,.5), colors=brewer.pal(12, "Paired"))
-      
-    })
-  
-  output$day_sentimenttype <- renderPlot({
-    # run nrc sentiment analysis to return data frame with each row classified as one of the following
-    # It also counts the number of positive and negative emotions found in each row
-    today_sentiment_text <-get_nrc_sentiment(tweet_text)%>%
-      # head(d,10) - to see top 10 lines of the get_nrc_sentiment dataframe
-      head (today_sentiment_text,10)%>%
-      
-      #transpose
-      td<-data.frame(t(today_sentiment_text))%>%
-        #Transformation and cleaning
-        names(td)[1] <- "count"%>%
-          td <- cbind("sentiment" = rownames(td), td)%>%
-            rownames(td) <- NULL%>%
-              td_new<-td[1:8,]%>%
-                #Plot One - count of words associated with each sentiment
-                quickplot(sentiment, data=td_new, weight=count, geom="bar", fill=sentiment, ylab="count")+ggtitle("Sentiments Analysis")+coord_flip()
-              
-  })
-  
-  top_words_list <- strsplit(tweet_text, split = " ")%>%
-    top_words <- as.data.frame(top_words_list)%>%
-    colnames(top_words) <- c("word")%>%
-    
-    bing_word_counts <- top_words %>%
-    inner_join(get_sentiments("bing")) %>%
-    count(word, sentiment, sort = TRUE) %>%
-    ungroup()
-  
-  
-  output$Top_PosNeg_Today <- renderPlot({
-    bing_word_counts %>%
-      group_by(sentiment) %>%
-      slice_max(n, n = 10) %>% 
-      ungroup() %>%
-      mutate(word = reorder(word, n)) %>%
-      ggplot(aes(n, word, fill = sentiment)) +
-      geom_col(show.legend = FALSE) +
-      facet_wrap(~sentiment, scales = "free_y") +
-      labs(x = "Contribution to sentiment",
-           y = NULL)
-  })
-  
-  
+
 }
 
 

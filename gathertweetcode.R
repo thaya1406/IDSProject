@@ -1,3 +1,5 @@
+library(gathertweet)
+
 gathertweet_search <- function(
     terms,
     file             = "tweets.rds",
@@ -13,7 +15,7 @@ gathertweet_search <- function(
     quiet            = FALSE,
     ...
 ) {
-  log_info("Searching for \"{paste0(terms, collapse = '\", \"')}\"")
+  gathertweet::log_info("Searching for \"{paste0(terms, collapse = '\", \"')}\"")
   
   since_id <- set_since_id(since_id, max_id, file)
   
@@ -35,7 +37,7 @@ gathertweet_search <- function(
   )
   
   if (isTRUE(`no-parse`)) {
-    log_info("Saving un-parsed tweets in {file}")
+    gathertweet::log_info("Saving un-parsed tweets in {file}")
     saveRDS(tweets, file)
   } else {
     tweets <- dplyr::bind_rows(tweets)
@@ -75,7 +77,7 @@ gathertweet_timeline <- function(
     include_rts = FALSE,
     ...
 ) {
-  log_info("Gathering tweets by {collapse(users)}")
+  gathertweet:: log_info("Gathering tweets by {collapse(users)}")
   
   n <- as.integer(n)
   if (n > 3200) {
@@ -108,7 +110,7 @@ gathertweet_favorites <- function(
     token       = NULL,
     ...
 ) {
-  log_info("Gathering tweets favorited by {collapse(users)}")
+  gathertweet::log_info("Gathering tweets favorited by {collapse(users)}")
   
   since_id <- set_since_id(since_id, max_id, file)
   n <- as.integer(n)
@@ -150,7 +152,7 @@ gathertweet_simplify <- function(
   if (is.null(output)) {
     output <- gathertweet:::path_add(file, append = "_simplified")
   }
-  log_info("Saving simplified tweets to {output}")
+  gathertweet:: log_info("Saving simplified tweets to {output}")
   save_tweets(tweets_simplified, output)
 }
 
@@ -167,22 +169,22 @@ set_since_id <- function(since_id = NULL, max_id = NULL, file = NULL) {
       NULL
     } else since_id
   }
-  if (!is.null(since_id)) log_info("Tweets from {since_id}")
-  if (!is.null(max_id)) log_info("Tweets up to {max_id}")
+  if (!is.null(since_id))gathertweet:: log_info("Tweets from {since_id}")
+  if (!is.null(max_id)) gathertweet::log_info("Tweets up to {max_id}")
   since_id
 }
 
 
 save_tweets_or_exit <- function(tweets, file) {
   if (nrow(tweets) == 0) {
-    log_info("---- No new tweets. ----")
+    gathertweet::log_info("---- No new tweets. ----")
   }
   
   tweets <- tweets[!duplicated(tweets$status_id), ]
   tweets <- tweets[order(tweets$status_id), ]
   
-  log_info("Gathered {nrow(tweets)} tweets")
+  gathertweet::log_info("Gathered {nrow(tweets)} tweets")
   tweets <- save_tweets(tweets, file)
   
-  log_info("Total of {nrow(tweets)} tweets in {file}")
+  gathertweet::log_info("Total of {nrow(tweets)} tweets in {file}")
 }

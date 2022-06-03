@@ -83,8 +83,9 @@ source("functions.R") ## Make sure the working directory is the same as this fil
 
 #### --- 0.0 UI ----
 ui <- dashboardPage(
-  dashboardHeader(title = h2(HTML("Brand Analyzer"),          
-                             style = "font-weight:bold"), 
+  
+  dashboardHeader(
+                  title = HTML("Brand Watch"), 
                   titleWidth = 250,
                   disable = FALSE),
   
@@ -92,7 +93,7 @@ ui <- dashboardPage(
     sidebarPanel(
       id = "sidebar",
 ##This one is the number of tweets to be downloaded
-      h5(style="color:#006d77", sliderInput("Tweets_to_Download",
+      h5(style="color:#fffff", sliderInput("Tweets_to_Download",
                                             "No of Tweets to Download:",
                                             min = 500,
                                             max = 18000,
@@ -100,11 +101,11 @@ ui <- dashboardPage(
                                             step = 500)),
 
 ##This one is for the user to key in the value
-      fluidPage(style="color:#006d77",
+      fluidPage(style="color:#fffff",
                 textInput("caption", "Key-in your word or Hashtags", "najib"),
                 verbatimTextOutput("value")), 
       
-      fluidPage(style="color:#006d77",
+      fluidPage(style="color:#fffff",
                 selectInput("state", "Location",
                             list(`North America` = list("United States of America", "Canada", "Mexico", "Greenland", "Cuba"),
                                  `South America` = list("Brazil", "Argentina", "Colombia", "Peru", "Chile", "Venezuela"),
@@ -126,7 +127,7 @@ ui <- dashboardPage(
     # Also add some custom CSS to make the title background area the same
     # color as the rest of the header.
     tags$head(tags$style(HTML("
-.body > div.wrapper > header > span {
+        .body > div.wrapper > header > span {
           padding: 19px;
           margin-bottom: 20px;
         }
@@ -389,8 +390,16 @@ server <- function(input, output,session) {
   access_token = "1068608387334766593-BpB8hUTe09InPeeGrAqZF9Rk2SEomb"
   access_secret = "phFEUzi8xfvjaS7XKi5i8VNjXzoDUh326mcJ6SczheBH6"
   
+  create_token(
+    app = "immigration_trend",
+    consumer_key = consumer_key,
+    consumer_secret = consumer_secret,
+    access_token = access_token,
+    access_secret = access_secret)
+  
+  
   # Set up Twiter Authentication 
-  setup_twitter_oauth(consumer_key,consumer_secret,access_token,access_secret)
+##  setup_twitter_oauth(consumer_key,consumer_secret,access_token,access_secret)
   
   
   
@@ -446,12 +455,8 @@ server <- function(input, output,session) {
     
     ##2.1 SENTIMENT ANALYSIS 
     
-    #Sentiment Dictionaries
-    get_sentiments(lexicon = "bing")  # Categorical Positive & Negative
-    get_sentiments(lexicon = "afinn") # Assigns polarity
-    
     # Joining Sentiment Dict with Tokenized Text
-    sentiment_bing <- tweets_tokenized %>% inner_join(get_sentiments("bing"))
+    sentiment_bing <- tweets_tokenized %>% inner_join(get_sentiments("bing" ))
     
     # Overall Sentiment
     sentiment_bing %>% count(sentiment)
@@ -493,7 +498,7 @@ server <- function(input, output,session) {
       mutate(text = tolower(text)) %>% 
       unnest_tokens(word, text) %>% 
       anti_join(stop_words) %>% 
-      inner_join(get_sentiments("bing")) %>% 
+      inner_join(get_sentiments("bing" )) %>% 
       group_by(word, sentiment) %>% 
       count(word, sentiment, sort = T) %>% 
       ungroup() %>% 
@@ -522,7 +527,7 @@ server <- function(input, output,session) {
       mutate(text = tolower(text)) %>% 
       unnest_tokens(word, text) %>% 
       anti_join(stop_words) %>% 
-      inner_join(get_sentiments("bing")) %>% 
+      inner_join(get_sentiments("bing" )) %>% 
       group_by(word, sentiment) %>% 
       count(word, sentiment, sort = T) %>% 
       ungroup() %>% 
@@ -566,10 +571,7 @@ server <- function(input, output,session) {
       rowid_to_column() %>%
       unnest_tokens(word,text)
     
-    get_sentiments(lexicon = "bing")  # Categorical Positive & Negative
-    get_sentiments(lexicon = "afinn") # Assigns polarity
-    
-    sentiment_bing <- tweets_tokenized %>% inner_join(get_sentiments("bing"))
+    sentiment_bing <- tweets_tokenized %>% inner_join(get_sentiments("bing" ))
     sentiment_bing %>% count(sentiment)
     
     tweets_tokenized <- tweets_cLOUD %>%
@@ -577,7 +579,7 @@ server <- function(input, output,session) {
       rowid_to_column() %>%
       unnest_tokens(word,text)
     
-    sentiment_bing <-  tweets_tokenized %>% inner_join(get_sentiments("bing"))
+    sentiment_bing <-  tweets_tokenized %>% inner_join(get_sentiments("bing" ))
     sentiment_by_word <-  sentiment_bing %>% count(word, sentiment, sort=TRUE)
     sentiment_by_word %>%
       slice(1:100) %>%
@@ -626,7 +628,7 @@ server <- function(input, output,session) {
       mutate(text = gsub("fidelity", " ", text)) %>% 
       unnest_tokens(word, text) %>% 
       anti_join(stop_words) %>% 
-      inner_join(get_sentiments("bing")) %>% 
+      inner_join(get_sentiments("bing" )) %>% 
       group_by(word, sentiment) %>% 
       count(word, sentiment, sort = T) %>% 
       ungroup() %>% 
@@ -768,11 +770,8 @@ server <- function(input, output,session) {
       unnest_tokens(word,text)
     
     tweets_tokenized %>% count(word,sort=TRUE) # Counting frequency of words
-  
-    get_sentiments(lexicon = "bing")  # Categorical Positive & Negative
-    get_sentiments(lexicon = "afinn") # Assigns polarity
     
-    sentiment_bing <- tweets_tokenized %>% inner_join(get_sentiments("bing"))
+    sentiment_bing <- tweets_tokenized %>% inner_join(get_sentiments("bing" ))
 
     sentiment_bing %>% count(sentiment)
     
@@ -1063,7 +1062,18 @@ server <- function(input, output,session) {
   
 
 
-
+  output$download <- downloadHandler(
+    filename = "documentation.pdf",
+    
+    content = function(file) {
+      
+      # temporarily switch to the temp dir, in case you do not have write
+      # permission to the current working directory
+      # owd <- setwd(tempdir())
+      # on.exit(setwd(owd))
+      file.copy("documentation.pdf", file) 
+    }
+  )
   
 
 }

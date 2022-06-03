@@ -15,6 +15,8 @@ library(rvest)
 library("openssl")
 library("httpuv")
 library(gathertweet)
+library(reactlog)
+
 
 ##TEXT
 library(tidytext)
@@ -51,7 +53,6 @@ library(dplyr)
 library(shinycssloaders)
 
 #Emoji
-library(emo)
 
 #Documentation
 library(knitr)
@@ -71,9 +72,6 @@ library(SnowballC)
 library(syuzhet)
 library(janeaustenr)
 
-GA_KEY <- if (file.exists("google_analytics_key.txt")) readLines("google_analytics_key.txt")
-
-
 
 # Rmd file
 rmdfiles <- c("documentation.Rmd")
@@ -81,8 +79,6 @@ sapply(rmdfiles, knit, quiet = T)
     
 # Files needed
 source("functions.R") ## Make sure the working directory is the same as this file
-source("settings.R") ## Make sure the working directory is the same as this files
-
 
 
 #### --- 0.0 UI ----
@@ -195,21 +191,6 @@ ui <- dashboardPage(
         }
         "))),
     
-    if (!is.null(GA_KEY)) HTML(
-      glue::glue(
-        '
-              <!-- Global site tag (gtag.js) - Google Analytics -->
-              <script async src="https://www.googletagmanager.com/gtag/js?id={GA_KEY}"></script>
-              <script>
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){{dataLayer.push(arguments);}}
-                  gtag(\'js\', new Date());
-                  gtag(\'config\', \'{GA_KEY}\');
-               </script>
-              ')
-    ),
-    
-    
     tabsetPanel(
       id = "tabset",
       tabPanel(title = "Sentiment Analysis",
@@ -223,14 +204,14 @@ ui <- dashboardPage(
                    ,status = "primary"
                    ,solidHeader = TRUE 
                    ,collapsible = TRUE
-                   ,withSpinner(plotOutput("wordcloud", height = "300px"))
+                   ,withSpinner(plotOutput("wordcloud", height = "300px"), color.background = "#0275D8")
                  ),
                  box(
                    title = "Summary of Sentiments"
                    ,status = "primary"
                    ,solidHeader = TRUE 
                    ,collapsible = TRUE 
-                   ,withSpinner(plotOutput("sentimenttype", height = "300px"))
+                   ,withSpinner(plotOutput("sentimenttype", height = "300px"), color.background = "#0275D8")
                  )),
                fluidRow(
                  box(
@@ -238,14 +219,14 @@ ui <- dashboardPage(
                    status = "primary",
                    solidHeader = TRUE,
                    collapsible = TRUE,
-                   withSpinner(plotOutput("bing", height = "300px"))
+                   withSpinner(plotOutput("bing", height = "300px"), color.background = "#0275D8")
                  ),
                  box(
                    title = "Types of Sentiments Found",
                    status = "primary",
                    solidHeader = TRUE,
                    collapsible = TRUE,
-                   withSpinner(plotOutput("NRC", height = "300px"))
+                   withSpinner(plotOutput("NRC", height = "300px"), color.background = "#0275D8")
                  )),
                fluidRow(
                  box(
@@ -254,7 +235,7 @@ ui <- dashboardPage(
                    width = 12,
                    solidHeader = TRUE,
                    collapsible = TRUE,
-                   withSpinner(plotlyOutput("polarity", height = "300px"))
+                   withSpinner(plotlyOutput("polarity", height = "300px"), color.background = "#0275D8")
                    
                  )),
            
@@ -267,7 +248,7 @@ ui <- dashboardPage(
                    ,status = "primary"
                    ,solidHeader = TRUE 
                    ,collapsible = TRUE
-                   ,withSpinner(leafletOutput("geoTaggedTweets"))
+                   ,withSpinner(leafletOutput("geoTaggedTweets"), color.background = "#0275D8")
 
                  )),
                fluidRow(  
@@ -278,7 +259,7 @@ ui <- dashboardPage(
                    ,status = "primary"
                    ,solidHeader = TRUE 
                    ,collapsible = TRUE
-                   ,withSpinner(reactableOutput("tweettable"))
+                   ,withSpinner(reactableOutput("tweettable"), color.background = "#0275D8")
                  )),
       ),
       tabPanel(title = "Number of tweets",
@@ -289,7 +270,7 @@ ui <- dashboardPage(
                    status = "primary",
                    solidHeader = TRUE,
                    collapsible = TRUE,
-                   withSpinner(plotOutput("No_of_tweets_hour", height = "300px"))
+                   withSpinner(plotOutput("No_of_tweets_hour", height = "300px"), color.background = "#0275D8")
                  )),
                fluidRow(
                  box(
@@ -298,7 +279,7 @@ ui <- dashboardPage(
                    status = "primary",
                    solidHeader = TRUE,
                    collapsible = TRUE,
-                   withSpinner(plotOutput("No_of_tweets_day", height = "300px"))
+                   withSpinner(plotOutput("No_of_tweets_day", height = "300px"), color.background = "#0275D8")
                  )),
                fluidRow(
                  box(
@@ -307,7 +288,7 @@ ui <- dashboardPage(
                    status = "primary",
                    solidHeader = TRUE,
                    collapsible = TRUE,
-                   withSpinner(plotOutput("No_of_tweets_week", height = "300px"))
+                   withSpinner(plotOutput("No_of_tweets_week", height = "300px"), color.background = "#0275D8")
                  )),
                
       ),
@@ -321,59 +302,30 @@ ui <- dashboardPage(
             title = "Top Tweeters",
             tags$div(
               class = "scroll-overflow-x",
-              withSpinner(uiOutput("top_tweeters"))
+              withSpinner(uiOutput("top_tweeters"), color.background = "#0275D8")
             )
           ),
           box(
             width = "6 col-lg-3",
             status = "danger",
             title = "Top Hashtags",
-            withSpinner(uiOutput("top_hashtags"))
+            withSpinner(uiOutput("top_hashtags"), color.background = "#0275D8")
           ),
           box(
             width = "6 col-lg-3",
             status = "warning",
             title = "Top Words",
-            withSpinner(uiOutput("top_tweet_words"))
+            withSpinner(uiOutput("top_tweet_words"), color.background = "#0275D8")
           ),
           box(
             width = "6 col-lg-3",
             status = "success",
             title = "Top Emoji",
-            withSpinner(uiOutput("top_emojis"))
+            withSpinner(uiOutput("top_emojis"), color.background = "#0275D8")
           )
         )
         ),
-      tabPanel(title = "Report of the day",
-               fluidRow(
-                 valueBoxOutput("today_sentiment_value",width = 12)
-               ),
-               fluidRow(  
-                 box(
-                   title = "WordCloud of the Day"
-                   ,status = "primary"
-                   ,solidHeader = FALSE 
-                   ,collapsible = TRUE
-                   ,withSpinner(plotOutput("day_wordcloud", height = "300px"))
-                 ),
-                 box(
-                   title = "Sentiments Found Today"
-                   ,status = "warning"
-                   ,solidHeader = FALSE 
-                   ,collapsible = TRUE 
-                   ,withSpinner(plotOutput("day_sentimenttype", height = "300px"))
-                 )),
-               fluidRow(
-                 box(
-                   title = "Today's Top Positive and Negative Words"
-                   ,status = "success"
-                   ,solidHeader = FALSE
-                   ,collapsible = TRUE
-                   ,width = 12
-                   ,withSpinner(plotOutput("Top_PosNeg_Today", height = "300px"))
-                 )),
-               
-      ),
+ 
       tabPanel(
         "Tweet Wall",
         class = "text-center",
@@ -398,7 +350,7 @@ ui <- dashboardPage(
             # Tweet Wall - Controls - end ---------------------------------------------
           ),
         ),
-        withSpinner(uiOutput("tweet_wall_tweets"), type = 3),
+        withSpinner(uiOutput("tweet_wall_tweets"), type = 3, color.background = "#0275D8"),
         shinyThings::paginationUI("tweet_wall_pager", width = 12, offset = 0),
         shinyThings::pagerUI("tweet_wall_pager", centered = TRUE),
       ),
@@ -453,13 +405,12 @@ server <- function(input, output,session) {
       n = input$Tweets_to_Download, #Number of results
       include_rts = TRUE,           #Dont include retweets if want unique tweets
     #  geocode = "3.14032,101.69466,93.5mi"
-     geocode = lookup_coords(input$state),
+     geocode = lookup_coords(input$state, apikey = "AIzaSyCZbE_A1CI2PlHD2KZdu15qVTU7U5wXujI"),
     lang = "en"
     
     )    
-    saveRDS(rt, "Data/raw.rds")
-    tweeets = readRDS("Data/raw.rds")
-    return(tweeets)
+ 
+    return(rt)
     
   })
   
@@ -477,11 +428,10 @@ server <- function(input, output,session) {
       n = input$Tweets_to_Download,   #Number of results
       include_rts = TRUE,            #Dont include retweets if want unique tweets
      # geocode = "3.14032,101.69466,93.5mi",
-      geocode = lookup_coords(input$state),
+     geocode = lookup_coords(input$state, apikey = "AIzaSyCZbE_A1CI2PlHD2KZdu15qVTU7U5wXujI"),
      lang = "en"
     )    
-    saveRDS(rt, "Data/raw.rds")
-    tweeets = readRDS("Data/raw.rds")
+    tweeets = rt
     
     
     
@@ -801,12 +751,12 @@ server <- function(input, output,session) {
       input$caption,                ##search query
       n = input$Tweets_to_Download,             ##Number of results
       include_rts = FALSE,   ## Dont include retweets if want unique tweets
-      geocode = lookup_coords(input$state),
+      geocode = lookup_coords(input$state, apikey = "AIzaSyCZbE_A1CI2PlHD2KZdu15qVTU7U5wXujI"),
       lang = "en"
       
     )    
-    saveRDS(rt, "Data/raw.rds")
-    tweeets = readRDS("Data/raw.rds")
+    
+    tweeets =rt
     
     
     
@@ -1111,18 +1061,7 @@ server <- function(input, output,session) {
       masonify_tweets()
   })
   
-  tweet_wall_date_preset <- shinyThings::dropdownButton("tweet_wall_date_presets",
-                                                        options = TWEET_WALL_DATE_INPUTS)
-  
-  observe({
-    req(tweet_wall_date_preset())
-    update_dates <- TWEET_WALL_DATE_RANGE(tweet_wall_date_preset())
-    if (any(is.na(update_dates))) return(NULL)
-    update_dates <- strftime(update_dates, "%F", tz = tz_global(), usetz = TRUE) %>% unname()
-    updateDateRangeInput(session, "tweet_wall_daterange", start = update_dates[1], end = update_dates[2], max = now(tz_global()))
-  })
-  
-  
+
 
 
   
@@ -1132,6 +1071,5 @@ server <- function(input, output,session) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
 
 

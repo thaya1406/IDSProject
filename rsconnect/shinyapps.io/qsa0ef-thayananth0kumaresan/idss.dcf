@@ -1,0 +1,14 @@
+name: idss
+title: idss
+username:
+account: qsa0ef-thayananth0kumaresan
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6405427
+bundleId: 5975418
+url: https://qsa0ef-thayananth0kumaresan.shinyapps.io/idss/
+when: 1654273396.08485
+lastSyncTime: 1654273396.08487
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: Slides Presentation/Brand_Analyzer.md|Slides Presentation/Brand_Analyzer.Rpres|Slides Presentation/style.css

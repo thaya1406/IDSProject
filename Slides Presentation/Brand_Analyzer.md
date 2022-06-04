@@ -66,9 +66,17 @@ left: 50%
 
 left: 50%
 
--   According to the nugit.co website, data storytelling is a methodology for communicating information, tailored to a specific audience, with a compelling narrative.
+> Data Storytelling
 
--   Therefore, our group proposed a dashboard that consists of numerous tools for stakeholders, specifically, brand and business owners as well as marketing executives to analyse the public's sentiment about their products. 
+-   According to the [nugit.co website](https://www.nugit.co/what-is-data-storytelling/), data storytelling is a methodology for communicating information, tailored to a specific audience, with a compelling narrative.  
+
+-   We believe that data in the form of rows and columns won't relay insights for decision-making effectively. In data storytelling, we would like to convey meaningful information our data holds that could make a groundbreaking difference to the audience.   
+
+-   Therefore, our group proposed a **dashboard** that consists of numerous visualization for stakeholders, specifically, brand and business owners as well as marketing executives to analyse the public's sentiment about their products.  
+
+-   Our **dashboard** contains:  
+    + Sentiment Analysis through Positive or Negative Tweets ratio, Number of total Tweets, Wordcloud, Summary of Sentiments, Top Positive and Negative Words and Types of Sentiment Found.  
+![](Slides Presentation/Data Story Sentiment.jpg)
 
 # Summary
 

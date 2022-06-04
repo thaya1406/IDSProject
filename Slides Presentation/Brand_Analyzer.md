@@ -91,11 +91,11 @@ Our **dashboard** contains:
 <p align="center"><img src="https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20Tweet%20Wall.jpg" alt="" width="800"/></p>
 
 > Choice of Data (Datasets)
-+ Since the visualization of our data supposed to be at real-time where new tweets are flooding in, we will be accessing the Twitter API through its specific keys and secrets.
-+ The Twitter API can be used to programmatically retrieve and analyze Twitter data, as well as build for the conversation on Twitter.
-+ Why we thought that Twitter API is the best choice of data for this project is because majority of the community leverages this social media to express their opinions, sentiments, views or arguments regarding a certain topic. According to the company's Q3 2020 report, 187 million people use the platform daily and 330 million use it at least once a month.
-+ The Twitter API lets you read and write Twitter data. Thus, you can use it to compose tweets, read profiles, and access your followers’ data and a high volume of tweets on particular subjects in specific locations.
-+ Twitter API contains several features including four main objects (Tweets, Entities, Places, and Users), daily restrictions: calls and changes in the API are restricted by access tokens to protect the platform from abuse, tt is based on HTTP (rather than SSL) and there are specific measures to adapt the API operation to the social network including library restrictions, generated paging, and specific parameters.
++ Since the visualization of our data supposed to be at real-time where new tweets are flooding in, we will be accessing the Twitter API through its specific keys and secrets.  
++ The Twitter API can be used to programmatically retrieve and analyze Twitter data, as well as build for the conversation on Twitter.  
++ Why we thought that Twitter API is the best choice of data for this project is because majority of the community leverages this social media to express their opinions, sentiments, views or arguments regarding a certain topic. According to the company's Q3 2020 report, 187 million people use the platform daily and 330 million use it at least once a month.  
++  The Twitter API lets you read and write Twitter data. Thus, you can use it to compose tweets, read profiles, and access your followers’ data and a high volume of tweets on particular subjects in specific locations.  
++   Twitter API contains several features including four main objects (Tweets, Entities, Places, and Users), daily restrictions: calls and changes in the API are restricted by access tokens to protect the platform from abuse, tt is based on HTTP (rather than SSL) and there are specific measures to adapt the API operation to the social network including library restrictions, generated paging, and specific parameters.
 
 # Summary
 

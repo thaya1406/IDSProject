@@ -81,19 +81,23 @@ left: 50%
 
     + Overview Tweets where the tweets are believe to be found and a table of Tweets that smartly analyses whether it is considered as a positive or negative tweet.  
     
-![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20Map%20and%20Table%20Tweet.jpg){width: 50%}  
+![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20Map%20and%20Table%20Tweet.jpg)  
+
 
     + Number of Tweets in terms of per hour, per day and per week to indicate how relevant your brand or product is throughout a period of time.  
     
-![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20Number%20of%20Scores.jpg){width: 50%}  
+![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20Number%20of%20Scores.jpg)  
+
 
     + High Scores where you'll be introduced with your brand's top tweeters, top hashtags, top words and top emojis.  
     
-![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20High%20Scores.jpg){width: 50%}  
+![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20High%20Scores.jpg)  
+
 
     + Tweet Wall, your awesome companion that graphically tells your clients' or followers'tweets about you.  
    
-![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20Tweet%20Wall.jpg){width: 50%}  
+![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20Tweet%20Wall.jpg)  
+
 
 # Summary
 

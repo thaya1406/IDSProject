@@ -76,24 +76,12 @@ left: 50%
 
 -   Our **dashboard** contains:  
     + Sentiment Analysis through Positive or Negative Tweets ratio, Number of total Tweets, Wordcloud, Summary of Sentiments, Top Positive and Negative Words and Types of Sentiment Found. ![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20Sentiment.jpg)  
-    + Overview Tweets where the tweets are believe to be found and a table of Tweets that smartly analyses whether it is considered as a positive or negative tweet.  
-    
-![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20Map%20and%20Table%20Tweet.jpg)  
+    + Overview Tweets where the tweets are believe to be found and a table of Tweets that smartly analyses whether it is considered as a positive or negative tweet. ![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20Map%20and%20Table%20Tweet.jpg)  
+    + Number of Tweets in terms of per hour, per day and per week to indicate how relevant your brand or product is throughout a period of time. ![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20Number%20of%20Scores.jpg)  
+    + High Scores where you'll be introduced with your brand's top tweeters, top hashtags, top words and top emojis. ![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20High%20Scores.jpg)  
+    + Tweet Wall, your awesome companion that graphically tells your clients' or followers'tweets about you. ![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20Tweet%20Wall.jpg)  
 
-
-    + Number of Tweets in terms of per hour, per day and per week to indicate how relevant your brand or product is throughout a period of time.  
-    
-![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20Number%20of%20Scores.jpg)  
-
-
-    + High Scores where you'll be introduced with your brand's top tweeters, top hashtags, top words and top emojis.  
-    
-![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20High%20Scores.jpg)  
-
-
-    + Tweet Wall, your awesome companion that graphically tells your clients' or followers'tweets about you.  
-   
-![](https://github.com/thaya1406/IDSProject/blob/master/Slides%20Presentation/Data%20Story%20Tweet%20Wall.jpg)  
+> Choice of Data (Datasets)
 
 
 # Summary

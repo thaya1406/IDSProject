@@ -76,7 +76,7 @@ left: 50%
 
 -   Our **dashboard** contains:  
     + Sentiment Analysis through Positive or Negative Tweets ratio, Number of total Tweets, Wordcloud, Summary of Sentiments, Top Positive and Negative Words and Types of Sentiment Found.  
-![](Slides Presentation/Data Story Sentiment.jpg)
+![]("Slides Presentation/Data Story Sentiment.jpg")
 
 # Summary
 

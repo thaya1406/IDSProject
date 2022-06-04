@@ -66,6 +66,10 @@ left: 50%
 
 left: 50%
 
+-   According to the nugit.co website, data storytelling is a methodology for communicating information, tailored to a specific audience, with a compelling narrative.
+
+-   Therefore, our group proposed a dashboard that consists of numerous tools for stakeholders, specifically, brand and business owners as well as marketing executives to analyse the public's sentiment about their products. 
+
 # Summary
 
 left: 50%

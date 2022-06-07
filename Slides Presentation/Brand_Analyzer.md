@@ -36,31 +36,36 @@ type: exclaim left: 50%
 
 # Data Science Process
 
-left: 50%
+> Data Understanding and Data Preparation:
 
-### **Preparation :**
+- We used twitteR package to get acces to the Twitter's API so we could extract the tweets from Twitter.
 
--   Setting goals
--   Exploring data
--   Data wrangling
--   Assessing data
+- Packages like rtweet and gathertweet were used to get the datas needed
 
-### **Building product :**
+- Tweets are extracted based on user's input word or hashtag and input number of tweets wanted.
 
--   Plan
--   Analyze
--   Engineering
+- Retweets aren't included to keep the unique tweets
 
-------------------------------------------------------------------------
+> Modelling:
 
--   Optimizing
--   Execute
+- to get the sentiments of tweet, we used the function get_sentiments("bing")
 
-### **Finish :**
+- the function will determine the overall sentiment for each tweet whether it is negative or positive
 
--   Deliver
--   Revise
--   Wrap Up
+- the datas are then formatted along with the sentiments for each tweet.
+
+> Evaluation:
+
+- to evaluate the performance of getting the sentiments for the tweets, we decided to make a couple features like summary  of sentiments, positive and negative wordcloud, top positive and negative words, types of sentimetns found and sentiment polarity for the input word.
+
+- a table of tweets also provided to show more detailed tweets alongside with their sentiments.
+
+- to help answer the first and third questions, graphs for number of tweets per hour,day and week, map of tweets along with tweet wall were added to help with understanding more about the public's opinions and how famous the brand is globally. 
+
+> Conclusion:
+
+- all of the features provided can help with answering the questions proposed which are depends on the input that the user put itself and satisfaction were achieved
+
 
 # Description on datasets
 

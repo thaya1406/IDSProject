@@ -24,3 +24,15 @@
   font-size: 22pt;
   font-family: "News Cycle", Impact, sans-serif;
 }
+
+.process .reveal li, h6{
+  margin-bottom: 0.3em;
+  font-size: 20pt;
+  font-family: "News Cycle", Impact, sans-serif;
+}
+
+.description .reveal li, h6{
+  margin-bottom: 0.3em;
+  font-size: 22pt;
+  font-family: "News Cycle", Impact, sans-serif;
+}

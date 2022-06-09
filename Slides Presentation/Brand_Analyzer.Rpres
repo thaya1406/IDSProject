@@ -1,5 +1,5 @@
 
-Brand Analyzer : Discover your online presence
+Brand Watch : Discover your online presence
 ====================================
 author : Four Square
 date: 31 May 2022
@@ -12,7 +12,7 @@ Group Members :
 - Arina Natasha binti Houri (U2000655)
 
 
-Get to know Brand Analyzer
+Get to know Brand Watch
 ====================================
 type: exclaim
 left: 50%
@@ -41,34 +41,32 @@ left: 50%
 
 Data Science Process
 ====================================
-type: exclaim
+type: process
 
-- We used twitteR package to get acces to the Twitter's API so we could extract the tweets from Twitter along with packages like rtweet and gathertweet were used to get the datas needed
-- Tweets are extracted based on user's input word or hashtag and input number of tweets wanted.
+- We used twitteR package to get access to the Twitter's API so we could scrape the tweets from Twitter, along with packages like rtweet and gathertweet to get data needed
+- Tweets are extracted based on user's input word or hashtag, and input number of tweets wanted.
 - Retweets aren't included to keep the unique tweets
-- to get the sentiments of tweet, we used the function get_sentiments("bing") to determine whether it is negative or positive
-- to evaluate the performance of the sentiment function, we decided to make a couple features like summary  of sentiments, positive and negative wordcloud, top positive and negative words, types of sentimetns found and sentiment polarity for the input word.
-- to help answer the first and third questions, graphs for number of tweets per hour,day and week, map of tweets along with tweet wall were added to help with understanding more about the public's opinions and how famous the brand is globally. 
+- To get the sentiments of tweet, we used the function get_sentiments("bing") to determine whether it is negative or positive
+- To evaluate the performance of the sentiment function, we decided to make a couple features like summary  of sentiments, positive and negative wordcloud, top positive and negative words, types of sentiments found and sentiment polarity for the input word.
+- To help answer the first and third questions, graphs for number of tweets per hour,day and week, map of tweets along with tweet wall were added to help with understanding more about the public's opinions and how famous the brand is globally. 
 
 
 Description on datasets
 ====================================
 left: 50%  
+type: description
+
 ### **Dataset Used**  
-<font size = "6px">  
 
 - Twitter Web API. This API can be used to programmatically retrieve and analyze Twitter data, as well as build for the conversation on Twitter.
 
-</font>
 
 ### **Explanation of the choice of the source data**  
-<font size = "6px">  
 
-- According to the kinsta.com website, Twitter found that 54% of users that have seen a brand mentioned in a Tweet take action, such as by visiting the company’s website, searching for the brand, or retweeting company Tweets.  
+- According to the kinsta.com website, Twitter found that 54% of users that have seen a brand mentioned in a Tweet take action, such as by visiting the company's website, searching for the brand, or retweeting company Tweets.  
 - Twitter Web API you to find and retrieve, engage with, or create a variety of different resources including the features such as tweets, users, spaces, direct messages, lists, trends, media and places.
 - Twitter Web API has four main objects: Tweets, Entities, Places, and Users which are essential for the various analysis in our dashboard.
 
-</font>  
 Summary
 ====================================
 left: 50%
@@ -77,7 +75,7 @@ left: 50%
 
 ***
 
-### **Access Brand Analyzer here!**
+### **Access Brand Watch here!**
 
 
 

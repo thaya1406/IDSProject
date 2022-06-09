@@ -53,10 +53,22 @@ type: exclaim
 
 Description on datasets
 ====================================
-left: 50%
+left: 50%  
+### **Dataset Used**  
+<font size = "6px">  
 
+- Twitter Web API. This API can be used to programmatically retrieve and analyze Twitter data, as well as build for the conversation on Twitter.
 
+</font>
 
+### **Explanation of the choice of the source data**  
+<font size = "6px">  
+
+- According to the kinsta.com website, Twitter found that 54% of users that have seen a brand mentioned in a Tweet take action, such as by visiting the company’s website, searching for the brand, or retweeting company Tweets.  
+- Twitter Web API you to find and retrieve, engage with, or create a variety of different resources including the features such as tweets, users, spaces, direct messages, lists, trends, media and places.
+- Twitter Web API has four main objects: Tweets, Entities, Places, and Users which are essential for the various analysis in our dashboard.
+
+</font>  
 Summary
 ====================================
 left: 50%

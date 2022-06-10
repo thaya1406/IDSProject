@@ -67,15 +67,38 @@ type: description
 - Twitter Web API you to find and retrieve, engage with, or create a variety of different resources including the features such as tweets, users, spaces, direct messages, lists, trends, media and places.
 - Twitter Web API has four main objects: Tweets, Entities, Places, and Users which are essential for the various analysis in our dashboard.
 
-Summary
+  
 ====================================
-left: 50%
+left: 60%
 
-### **Our Precious Experience**
-
+### **Features of Our App**
+![Tweet Wall](picture-1.png)
+######   • Sentiment Analysis  • Overview of Tweets
+######   • Number of Tweets    • High Scores
+######   • Tweet Wall          • Documentation
 ***
+### **Our Precious Experience**
+###### • It was an exciting journey to apply, test and learn Data Science & R knowledge.
 
-### **Access Brand Watch here!**
+###### •	We realized the importance of data and the power it holds.
+
+###### •	We also enjoyed the collaborative effort we put into this project.
+
+\n
+Access source code here!
+
+
+Access our Shiny App  here !
+
+
+###  Thank you !
+
+
+
+
+
+
+
 
 
 

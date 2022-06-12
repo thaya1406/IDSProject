@@ -80,18 +80,24 @@ sapply(rmdfiles, knit, quiet = T)
 # Files needed
 source("functions.R") ## Make sure the working directory is the same as this file
 
+# TITLE
+title <- tags$a( href = "https://www.purshology.com/wp-content/uploads/2021/01/free-twitter-sentiment-analysis-tools-update-tile.png",
+  tags$img(src = "logo_modified.png", height = '30'),
+  "Brand Watch",
+  style = "color:#edf6f9")
 
 #### --- 0.0 UI ----
 ui <- dashboardPage(
   
   dashboardHeader(
-                  title = HTML("Brand Watch"), 
+                  title = title,
                   titleWidth = 250,
                   disable = FALSE),
   
   dashboardSidebar(
     sidebarPanel(
       id = "sidebar",
+      img(src="logo_modified.png",height=50,width=50, style="display: block; margin-left: auto; margin-right: auto;"),
 ##This one is the number of tweets to be downloaded
       h5(style="color:#fffff", sliderInput("Tweets_to_Download",
                                             "No of Tweets to Download:",
@@ -139,7 +145,7 @@ ui <- dashboardPage(
         
         .skin-blue .main-header .logo {
           background-color: #006d77;
-          color:#edf6f9;
+          color:#edf6f9; 
           height: auto;
         }
         
@@ -154,6 +160,7 @@ ui <- dashboardPage(
         .main-sidebar {
             background-color: #006d77 !important;
         }
+        
         #sidebar{
             background-color: #006d77;
         }

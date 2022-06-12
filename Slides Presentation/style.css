@@ -13,15 +13,12 @@
 }
 
 .reveal h6 {
-    font-size: 22pt;
+    font-size: 20pt;
 }
 
-.reveal li {
-}
-
-.exclaim .reveal li, h6{
-  margin-bottom: 0.3em;
-  font-size: 22pt;
+.exclaim .reveal li, ul, h6{
+  margin-bottom: 0.2em;
+  font-size: 20pt;
   font-family: "News Cycle", Impact, sans-serif;
 }
 
@@ -35,4 +32,15 @@
   margin-bottom: 0.3em;
   font-size: 22pt;
   font-family: "News Cycle", Impact, sans-serif;
+}
+
+.summary .reveal ul, h6{
+  margin-bottom: 0.3em;
+  font-size: 18pt;
+  font-family: "News Cycle", Impact, sans-serif;
+}
+
+.summary .reveal h5{
+  font-size: 25pt;
+  font-weight: 600;
 }

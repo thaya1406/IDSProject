@@ -29,12 +29,15 @@ left: 50%
 
 
 ***
-### **Questions proposed :**
+#### **Problem Statement:**
+###### Small businesses lack the resources to assess the marketability of their products.
+
+#### **Questions proposed :**
 1.  What is the public's opinion of a brand?
 2. Which sentiment is most frequently expressed by customers toward a brand?
 3.  What factors contribute to the customer's sentiment?
 
-### **Possible stakeholders:**
+#### **Possible stakeholders:**
 1. Brand Owners
 2. Business Owners
 3. Marketing Executive
@@ -69,7 +72,9 @@ type: description
 
   
 ====================================
+title: FALSE
 left: 60%
+type: summary
 
 ### **Features of Our App**
 ![Tweet Wall](picture-1.png)
@@ -84,12 +89,11 @@ left: 60%
 
 ###### •	We also enjoyed the collaborative effort we put into this project.
 
-\n
-Access source code here!
+##### **Access our source code  here !**
 
-
-Access our Shiny App  here !
-
+##### **Access our Shiny App  here !**
+ 
+##### [Access RPresentation here!](https://rpubs.com/ArinaNatasha/913841)
 
 ###  Thank you !
 

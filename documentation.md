@@ -2,9 +2,9 @@
 output: pdf_document
 ---
 
-![](logo.png){width="168"}
+## **Documentation**
 
-##  **[Documentation]{.underline}**
+<img src="www/logo_modified.png" title="plot of chunk unnamed-chunk-1" alt="plot of chunk unnamed-chunk-1" width="50px" />
 
 ### **Introducing,** *Brand Watch*
 

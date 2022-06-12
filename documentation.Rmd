@@ -1,19 +1,13 @@
 ---
 output: pdf_document
-title: |
-  ![](logo.png){width=1in}  
-  Documentation
 ---
 
-<<<<<<< Updated upstream
-=======
 ## **Documentation**
 
 ```{r, out.width = "50px", echo = FALSE}
 knitr::include_graphics("www/logo_modified.png")
 ```
 
->>>>>>> Stashed changes
 ### **Introducing,** *Brand Watch*
 
 Brand Watch is an all-in-one Twitter-specific sentiment analysis app to discover your online presence. You can now extract customers' feelings, experiences, and needs in relation to your marketing campaign or even a new product release. Not only that, but you can also analyse your competition by monitoring how customers talk about them and looking for opportunities to improve your own business. Monitor your brand's reputation and make data-driven decisions, all at the tip of your finger!

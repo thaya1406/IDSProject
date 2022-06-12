@@ -8,7 +8,7 @@ output: pdf_document
 
 ### **Introducing,** *Brand Watch*
 
-##### Brand Watch is an all-in-one Twitter-specific sentiment analysis app to discover your online presence. You can now extract customers' feelings, experiences, and needs in relation to your marketing campaign or even a new product release. Not only that, but you can also analyse your competition by monitoring how customers talk about them and looking for opportunities to improve your own business. Monitor your brand's reputation and make data-driven decisions, all at the tip of your finger!
+Brand Watch is an all-in-one Twitter-specific sentiment analysis app to discover your online presence. You can now extract customers' feelings, experiences, and needs in relation to your marketing campaign or even a new product release. Not only that, but you can also analyse your competition by monitoring how customers talk about them and looking for opportunities to improve your own business. Monitor your brand's reputation and make data-driven decisions, all at the tip of your finger!
 
 #### **How to use this app?**
 

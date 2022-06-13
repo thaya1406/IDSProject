@@ -29,7 +29,7 @@ left: 50%
 
 
 ***
-#### **Problem Statement:**
+#### **Problem Statement :**
 ###### Small businesses lack the resources to assess the marketability of their products.
 
 #### **Questions proposed :**
@@ -37,7 +37,7 @@ left: 50%
 2. Which sentiment is most frequently expressed by customers toward a brand?
 3.  What factors contribute to the customer's sentiment?
 
-#### **Possible stakeholders:**
+#### **Possible stakeholders :**
 1. Brand Owners
 2. Business Owners
 3. Marketing Executive
@@ -47,31 +47,32 @@ Data Science Process
 type: process
 left: 50%
 
-### **Asking Questions**
+#### **Asking Questions**
 
-we determine problems that companies and brands can have and how we can solve and get answers for them using data science.
+- We determine problems that companies and brands can have and how we can solve and get answers for them using data science.
 
-### **Finding data**
+#### **Finding data**
 
-Getting access to the twitter API to retrieve data from Twitter
+- Getting access to the twitter API to retrieve data from Twitter
 
-### **Getting data**
+#### **Getting data**
 
-twitteR package is used to get a list of raw tweets from the Twitter API
-Tweets are extracted based on user's input word or hashtag and input number of tweets wanted
+- twitteR package is used to get a list of raw tweets from the Twitter API
+- Tweets are extracted based on user's input word or hashtag and input number of tweets wanted
 
-### **Cleaning data**
+***
+#### **Cleaning data**
 
-the list of tweets is turned into a dataframe
+- The list of tweets is turned into a dataframe
 URLs, links are removed and retweets aren't included for unique tweets
 
-### **Analysing data**
+#### **Analysing data**
 
-function get_sentiments("bing") is used to determine the sentiment of the tweets by checking each words in it whether its positive or negative
+- Function get_sentiments("bing") is used to determine the sentiment of the tweets by checking each words in it whether its positive or negative
 
-### **Presenting data**
+#### **Presenting data**
 
-summary  of sentiments, positive and negative wordcloud, top positive and negative words, types of sentimetns found and sentiment polarity for the input word along with the documentation are presented in the Shiny App and published on RPubs
+- Summary  of sentiments, positive and negative wordcloud, top positive and negative words, types of sentimetns found and sentiment polarity for the input word along with the documentation are presented in the Shiny App and published on RPubs
 
 
 Description on datasets

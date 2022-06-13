@@ -24,8 +24,12 @@
 
 .process .reveal li, h6{
   margin-bottom: 0.3em;
-  font-size: 20pt;
+  font-size: 18pt;
   font-family: "News Cycle", Impact, sans-serif;
+}
+.process .reveal h4{
+  margin-bottom: 0.3em;
+  font-size: 20pt;
 }
 
 .description .reveal li, h6{

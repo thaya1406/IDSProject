@@ -551,8 +551,12 @@ body {
 
 .process .reveal li, h6{
   margin-bottom: 0.3em;
-  font-size: 20pt;
+  font-size: 18pt;
   font-family: "News Cycle", Impact, sans-serif;
+}
+.process .reveal h4{
+  margin-bottom: 0.3em;
+  font-size: 20pt;
 }
 
 .description .reveal li, h6{
@@ -833,7 +837,7 @@ hljs.initHighlightingOnLoad();
 <div class="column column2 slideContent" style="width: 48%;" >
 
 
-<h4><strong>Problem Statement:</strong></h4>
+<h4><strong>Problem Statement :</strong></h4>
 
 <h6>Small businesses lack the resources to assess the marketability of their products.</h6>
 
@@ -845,7 +849,7 @@ hljs.initHighlightingOnLoad();
 <li> What factors contribute to the customer&#39;s sentiment?</li>
 </ol>
 
-<h4><strong>Possible stakeholders:</strong></h4>
+<h4><strong>Possible stakeholders :</strong></h4>
 
 <ol>
 <li>Brand Owners</li>
@@ -858,14 +862,49 @@ hljs.initHighlightingOnLoad();
 </section>
 <section data-state="process" data-transition="linear" data-transition-speed="default">
 <h3>Data Science Process</h3>
-<div class="slideContent" >
+<div class="column column1 slideContent" style="width: 48%;" >
+<h4><strong>Asking Questions</strong></h4>
+
 <ul>
-<li>We used twitteR package to get access to the Twitter&#39;s API so we could scrape the tweets from Twitter, along with packages like rtweet and gathertweet to get data needed</li>
-<li>Tweets are extracted based on user&#39;s input word or hashtag, and input number of tweets wanted.</li>
-<li>Retweets aren&#39;t included to keep the unique tweets</li>
-<li>To get the sentiments of tweet, we used the function get_sentiments(&ldquo;bing&rdquo;) to determine whether it is negative or positive</li>
-<li>To evaluate the performance of the sentiment function, we decided to make a couple features like summary  of sentiments, positive and negative wordcloud, top positive and negative words, types of sentiments found and sentiment polarity for the input word.</li>
-<li>To help answer the first and third questions, graphs for number of tweets per hour,day and week, map of tweets along with tweet wall were added to help with understanding more about the public&#39;s opinions and how famous the brand is globally. </li>
+<li>We determine problems that companies and brands can have and how we can solve and get answers for them using data science.</li>
+</ul>
+
+<h4><strong>Finding data</strong></h4>
+
+<ul>
+<li>Getting access to the twitter API to retrieve data from Twitter</li>
+</ul>
+
+<h4><strong>Getting data</strong></h4>
+
+<ul>
+<li>twitteR package is used to get a list of raw tweets from the Twitter API</li>
+<li>Tweets are extracted based on user&#39;s input word or hashtag and input number of tweets wanted</li>
+</ul>
+
+
+</div>
+
+<div class="column column2 slideContent" style="width: 48%;" >
+
+
+<h4><strong>Cleaning data</strong></h4>
+
+<ul>
+<li>The list of tweets is turned into a dataframe
+URLs, links are removed and retweets aren&#39;t included for unique tweets</li>
+</ul>
+
+<h4><strong>Analysing data</strong></h4>
+
+<ul>
+<li>Function get_sentiments(&ldquo;bing&rdquo;) is used to determine the sentiment of the tweets by checking each words in it whether its positive or negative</li>
+</ul>
+
+<h4><strong>Presenting data</strong></h4>
+
+<ul>
+<li>Summary  of sentiments, positive and negative wordcloud, top positive and negative words, types of sentimetns found and sentiment polarity for the input word along with the documentation are presented in the Shiny App and published on RPubs</li>
 </ul>
 
 </div>

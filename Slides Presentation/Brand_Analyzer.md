@@ -45,13 +45,33 @@ left: 50%
 Data Science Process
 ====================================
 type: process
+left: 50%
 
-- We used twitteR package to get access to the Twitter's API so we could scrape the tweets from Twitter, along with packages like rtweet and gathertweet to get data needed
-- Tweets are extracted based on user's input word or hashtag, and input number of tweets wanted.
-- Retweets aren't included to keep the unique tweets
-- To get the sentiments of tweet, we used the function get_sentiments("bing") to determine whether it is negative or positive
-- To evaluate the performance of the sentiment function, we decided to make a couple features like summary  of sentiments, positive and negative wordcloud, top positive and negative words, types of sentiments found and sentiment polarity for the input word.
-- To help answer the first and third questions, graphs for number of tweets per hour,day and week, map of tweets along with tweet wall were added to help with understanding more about the public's opinions and how famous the brand is globally. 
+### **Asking Questions**
+
+we determine problems that companies and brands can have and how we can solve and get answers for them using data science.
+
+### **Finding data**
+
+Getting access to the twitter API to retrieve data from Twitter
+
+### **Getting data**
+
+twitteR package is used to get a list of raw tweets from the Twitter API
+Tweets are extracted based on user's input word or hashtag and input number of tweets wanted
+
+### **Cleaning data**
+
+the list of tweets is turned into a dataframe
+URLs, links are removed and retweets aren't included for unique tweets
+
+### **Analysing data**
+
+function get_sentiments("bing") is used to determine the sentiment of the tweets by checking each words in it whether its positive or negative
+
+### **Presenting data**
+
+summary  of sentiments, positive and negative wordcloud, top positive and negative words, types of sentimetns found and sentiment polarity for the input word along with the documentation are presented in the Shiny App and published on RPubs
 
 
 Description on datasets

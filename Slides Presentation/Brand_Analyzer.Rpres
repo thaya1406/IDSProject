@@ -118,6 +118,20 @@ type: summary
 
 ###  Thank you !
 
+====================================
+title: FALSE
+type: takeaway
+
+# **Key Takeaway**
+
+- Our product is a Twitter-based sentiment analysis tool that is simple to use.
+
+- Suitable for anyone who wants to explore their brand's online presence.
+
+- We offer multiple metrics for evaluating brand sentiment, including NRC and bing implementation from the TidyText package, top positive and negative buzzwords, word cloud, and sentiment polarity.
+
+- Tweets on map, table of tweets, tweet wall, and amount of postings generated hourly, daily, and weekly are available to provide various visualizations and insights.
+
 
 
 

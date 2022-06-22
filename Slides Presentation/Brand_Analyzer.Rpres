@@ -114,7 +114,7 @@ type: summary
 
 ##### **Access our Shiny App  here !**
  
-##### [Access RPresentation here!](https://rpubs.com/ArinaNatasha/917033)
+##### [Access RPresentation here!](https://rpubs.com/ArinaNatasha/917180)
 
 ###  Thank you !
 
@@ -122,7 +122,7 @@ type: summary
 title: FALSE
 type: takeaway
 
-# **Key Takeaway**
+## **Key Takeaway**
 
 - Our product is a Twitter-based sentiment analysis tool that is simple to use.
 

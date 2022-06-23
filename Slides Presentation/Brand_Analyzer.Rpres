@@ -110,11 +110,11 @@ type: summary
 
 ###### •	We also enjoyed the collaborative effort we put into this project.
 
-##### **Access our source code  here !**
+###### **Access our source code  here!:** https://github.com/thaya1406/IDSProject
 
-##### **Access our Shiny App  here !**
+###### **Access our Shiny App  here!** https://qsa0ef-thayananth0kumaresan.shinyapps.io/idss/
  
-##### [Access RPresentation here!](https://rpubs.com/ArinaNatasha/917180)
+###### **Access RPresentation here!** https://rpubs.com/ArinaNatasha/917721
 
 ###  Thank you !
 
